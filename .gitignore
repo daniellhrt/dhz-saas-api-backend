@@ -35,4 +35,3 @@ build/
 ### Custom & Security ###
 .env
 .env.*
-.planning/
