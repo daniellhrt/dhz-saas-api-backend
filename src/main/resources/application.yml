@@ -1,0 +1,31 @@
+# Arquivo: src/main/resources/application.yml
+spring:
+  application:
+    name: dhz-saas-api-backend
+  profiles:
+    active: dev # Perfil padrão
+
+# Configurações do domínio de segurança da aplicação
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET} # Carregado obrigatoriamente do ambiente (.env ou SO)
+      expiration-ms: 86400000 # 24 horas
+
+---
+# Perfil de Desenvolvimento
+spring:
+  config:
+    activate:
+      on-profile: dev
+  docker:
+    compose:
+      enabled: true
+      lifecycle-management: start-and-stop # Inicia o banco ao rodar a API, desliga ao parar a API
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
