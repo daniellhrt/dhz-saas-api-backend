@@ -1,93 +1,45 @@
-# Convenções — dhz-saas-api-backend
+# CONVENTIONS.md
 
-> Mapeado em: 2026-05-21
+## Overview
+This document outlines the coding conventions, formatting rules, naming conventions, and patterns found in the `dhz-saas-api-backend` project.
 
-## Linguagem & Estilo
+## Architecture & Structure
+- **Package by Feature/Domain**: The codebase is organized by domain in `src/main/java/br/com/dht/apibackend/domain/*` (e.g., `appointment`, `barber`, `catalog`, `client`) and cross-cutting concerns in `security`, `config`, and `exception`.
+- **Layered Architecture**: Within a domain package, the application follows a layered approach: Controller -> Service -> Repository.
+- **Multitenancy**: The application is designed as a SaaS with multitenancy. Tenant isolation is managed via a thread-local context (`TenantContext.getTenantId()`). Entities store a `tenantId`, and all repository queries and service validations explicitly check against this tenant ID to prevent IDOR (Insecure Direct Object Reference) and data leakage.
 
-- **Idioma do código:** Inglês (nomes de classes, métodos, variáveis)
-- **Idioma dos comentários:** Português (BR) — Javadoc e comentários internos
-- **Java version:** 21 (sem uso explícito de features modernas como virtual threads)
+## Coding & Formatting Conventions
+- **Language**: Java 21 with Spring Boot 3.2.5.
+- **Documentation**: Javadoc style block comments are used at the top of key classes to define their purpose, responsibility, and architectural role. Comments are written in Portuguese.
+    ```java
+    /**
+     * Propósito: [What the class does]
+     * Responsabilidade: [Core responsibilities]
+     * Papel na Arquitetura: [e.g., Domain / Service]
+     */
+    ```
+- **Dependency Injection**: Constructor injection is exclusively used via Lombok's `@RequiredArgsConstructor` and `private final` fields.
+- **Language**: Internal comments, business rule validation messages, and error responses are written in Portuguese.
 
-## Estrutura de Pacotes
+## Naming Conventions
+- **Classes**: PascalCase (e.g., `AppointmentService`, `AppointmentDTO`).
+- **Methods/Variables**: camelCase (e.g., `scheduleAppointment`, `tenantId`).
+- **Database Tables**: Pluralized, snake_case strings (e.g., `appointments`, `client_id`). Configured explicitly via JPA `@Table` and `@Column` annotations.
+- **Endpoints**: Pluralized resource names with API versioning (e.g., `/api/v1/appointments`).
 
-```
-br.com.dht.apibackend
-├── config/              # Configurações transversais (JWT, Tenant)
-├── domain/              # Domínios de negócio (feature-based)
-│   ├── appointment/     # Entity, Controller, Service, Repository, DTO, Enum
-│   ├── barber/          # Entity, Repository (sem Controller/Service)
-│   ├── catalog/         # Entity, Controller, Service, Repository, DTO
-│   └── client/          # Entity, Controller, Service, Repository, DTO
-├── exception/           # Tratamento global de exceções
-└── security/            # Auth, JWT, Filtros, DTOs de auth
-    └── dto/
-```
-
-**Padrão:** Pacotes por domínio/feature, não por camada técnica.
-
-## Padrão por Domínio
-
-Cada domínio segue a estrutura:
-- `Entity.java` — JPA Entity com Lombok
-- `Repository.java` — Spring Data JPA (extends `JpaRepository<Entity, UUID>`)
-- `Service.java` — Lógica de negócio com `@Service`
-- `Controller.java` — REST endpoints com `@RestController`
-- `DTO.java` — Records Java como classes internas (ex: `ClientDTO.Request`, `ClientDTO.Response`)
-- `Enum.java` — Enumerações de status (quando aplicável)
-
-**Exceção:** `barber` só tem Entity + Repository (sem controller/service próprios — autenticação é via `security/`).
-
-## Entidades (JPA)
-
-- **PKs:** `UUID` em todas as entidades
-- **Multi-tenancy:** Coluna `tenant_id` em todas as tabelas (`@Column(updatable = false)`)
-- **Timestamps:** `@CreationTimestamp` para `created_at`
-- **Construtores:** `protected` no-arg constructor (requisito JPA) + construtores customizados
-- **Lombok:** `@Getter`, `@Setter`, `@RequiredArgsConstructor`, `@NoArgsConstructor`, `@EqualsAndHashCode(of = "id")`
-- **Builders:** `@Builder` em algumas entidades
-
-## DTOs
-
-- **Tipo:** Java Records (imutáveis)
-- **Estrutura:** Classes wrapper com records internos (ex: `ClientDTO.Request`, `ClientDTO.Response`)
-- **Validação:** Jakarta Bean Validation annotations (`@NotBlank`, `@Email`, `@NotNull`, `@Min`, etc.)
-- **Conversão:** Métodos estáticos `toEntity()` e `fromEntity()` nos records
-
-## Controllers (REST)
-
-- **Base path:** `/api/v1/{domínio}`
-- **Anotações:** `@RestController`, `@RequestMapping`
-- **Respostas:** `ResponseEntity<>` com status HTTP explícitos
-- **Validação:** `@Valid` nos parâmetros de request body
-
-## Services
-
-- **Anotação:** `@Service` com `@RequiredArgsConstructor`
-- **Injeção:** Via construtor (Lombok gera)
-- **Tenant:** `TenantContext.getTenantId()` para filtrar dados por tenant
-- **Exceções:** `RuntimeException` com mensagens descritivas em português
-
-## Tratamento de Erros
-
-- **Handler global:** `@RestControllerAdvice` em `GlobalExceptionHandler`
-- **Formato:** `StandardError` (timestamp, status, error, message, path)
-- **Exceções tratadas:** `MethodArgumentNotValidException`, `RuntimeException`
-- **Logging:** Comentado — placeholder para implementação futura
-
-## API Versioning
-
-- **Estratégia:** URL-based (`/api/v1/...`)
-
-## Documentação de Código
-
-Cada classe Java possui bloco de comentário com:
-```java
-/**
- * Propósito: [descrição]
- * Responsabilidade: [o que faz]
- * Papel na Arquitetura: [onde se encaixa]
- */
-```
-
----
-*Mapeado: 2026-05-21 via gsd-map-codebase*
+## Design Patterns & Practices
+- **DTOs (Data Transfer Objects)**: DTOs are implemented using Java 21 `record`s. They are typically nested inside a wrapper class (e.g., `AppointmentDTO`) containing `Request` and `Response` records.
+- **Static Factory Methods**: DTO responses often use a static factory method named `fromEntity(Entity e)` to map JPA entities to records.
+- **Entity Guidelines**:
+  - Annotated with `@Entity`, `@Getter`, `@NoArgsConstructor(access = AccessLevel.PROTECTED)`, and `@EqualsAndHashCode(of = "id")`.
+  - Use `UUID` for primary keys with `GenerationType.UUID`.
+  - Utilize explicit `@JoinColumn` and `FetchType.LAZY` for associations.
+  - Creation timestamps are managed via Hibernate's `@CreationTimestamp` (`updatable = false`).
+  - Entities often have custom constructors that initialize default state (like `status`) and do not accept auto-managed fields (like `id` or `createdAt`).
+- **Exception Handling**: Handled globally via a `@RestControllerAdvice` class (`GlobalExceptionHandler`). 
+  - Standardized JSON responses using a custom `StandardError` builder.
+  - `IllegalArgumentException` and `IllegalStateException` represent business rule violations and return a 400 Bad Request.
+  - Validation exceptions (`MethodArgumentNotValidException`) aggregate all field errors into a single, comma-separated string.
+  - Generic exceptions return 500 without leaking stack traces.
+- **Security**: Stateless JWT authentication. Routes are secured by default, except for specific public endpoints like login. Passwords are encrypted using BCrypt.
+- **Defensive Programming**: Services explicitly check if related entities belong to the current tenant and if they are in an active/valid state before proceeding with mutations.

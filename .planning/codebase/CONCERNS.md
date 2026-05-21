@@ -1,104 +1,34 @@
-# Preocupações — dhz-saas-api-backend
+# Codebase Concerns & Tech Debt
 
-> Mapeado em: 2026-05-21
+This document outlines technical debt, security concerns, performance bottlenecks, and code quality issues identified in the codebase.
 
-## Problemas Críticos 🔴
+## 1. Architecture & Design (Multi-Tenancy)
+- **Manual Tenant Isolation**: The application implements Multi-Tenancy by manually fetching the `tenantId` from `TenantContext` and explicitly passing it to Repository methods (e.g., `findByEmailAndTenantId`).
+  - **Risk**: High risk of **IDOR (Insecure Direct Object Reference)** and cross-tenant data leaks. If a developer forgets to include the `tenantId` parameter in a query, data from other tenants could be exposed or modified.
+  - **Recommendation**: Refactor to use Hibernate Filters (`@FilterDef` and `@Filter`) so the tenant isolation is enforced transparently and globally at the ORM level.
 
-### 1. JWT Secret Hardcoded
+## 2. Security Concerns
+- **Improper HTTP Status on Login Failure**: In `AuthService`, invalid credentials throw an `IllegalArgumentException("Credenciais inválidas.")`. The `GlobalExceptionHandler` maps this to an HTTP `400 Bad Request`.
+  - **Recommendation**: Create a specific exception (e.g., `UnauthorizedException`) and map it to HTTP `401 Unauthorized` to correctly reflect authentication failures.
+- **Missing Rate Limiting**: The public authentication endpoint `/api/v1/auth/login` is exposed without any rate limiting, leaving it vulnerable to brute-force or credential stuffing attacks.
 
-**Arquivo:** `src/main/resources/application.yml`
+## 3. Observability & Error Handling
+- **Swallowed Internal Server Errors**: The `GlobalExceptionHandler` catches generic `Exception.class` to return a safe 500 error, but it fails to actually log the exception. It contains a placeholder comment: `// Em um cenário real, aqui entraria um log.error("Erro interno", ex);`.
+  - **Risk**: Stack traces and critical application errors are completely lost, making production debugging nearly impossible.
+  - **Recommendation**: Integrate a logging framework (e.g., SLF4J/Logback via `@Slf4j`) and log the exception details before returning the generic response.
 
-```yaml
-app:
-  security:
-    jwt:
-      secret: 413F4428472B4B6250655368566D5970337336763979244226452948404D6351
-```
+## 4. Test Coverage Gaps
+- **Missing Critical Tests**: While the `Appointment` domain and `SecurityFilter` have test coverage, several core domains are entirely missing unit and integration tests:
+  - `AuthService` and `TokenService` (Handling critical security logic).
+  - `Client` domain (Service, Repository, Controller).
+  - `Catalog` domain (Service, Repository, Controller).
+  - **Recommendation**: Prioritize adding unit and integration tests for authentication and remaining business domains.
 
-O segredo JWT está hardcoded no arquivo de configuração. Não existe override para perfil de produção. Se este código for para produção, qualquer pessoa com acesso ao repositório pode forjar tokens válidos.
+## 5. Performance Bottlenecks
+- **Lack of Pagination**: Methods such as `ClientService.listAllClients()` and `CatalogService.listActiveServices()` fetch all records for a tenant into memory at once using `findAllByTenantId`.
+  - **Risk**: As the database grows, this will cause high memory consumption, slow response times, and potential OutOfMemory errors.
+  - **Recommendation**: Update endpoints and repositories to accept `Pageable` and return paginated data (`Page<T>`).
 
-**Correção:** Usar variável de ambiente (`${JWT_SECRET}`) com fallback para dev.
-
-### 2. Zero Cobertura de Testes
-
-Apenas o teste smoke do Spring Initializr existe. Nenhum teste unitário, de integração ou de segurança.
-
-**Risco:** Mudanças podem quebrar funcionalidades sem detecção.
-
-## Problemas Altos 🟠
-
-### 3. Credenciais de DB Hardcoded
-
-**Arquivo:** `compose.yaml`
-
-```yaml
-POSTGRES_USER: admin
-POSTGRES_PASSWORD: adminpassword
-```
-
-Aceitável para dev local, mas sem padrão `.env` para facilitar a transição para produção.
-
-### 4. Sem Pipeline CI/CD
-
-Nenhuma configuração de CI/CD encontrada. Sem build automatizado, sem testes automatizados, sem deploy.
-
-### 5. Sem README.md
-
-Projeto sem documentação de onboarding. Novos desenvolvedores não têm guia de como configurar e rodar o projeto.
-
-## Problemas Médios 🟡
-
-### 6. Sem Checkstyle / EditorConfig
-
-Nenhuma ferramenta de enforcement de estilo de código configurada. Consistência depende de disciplina manual.
-
-### 7. HELP.md Desatualizado
-
-`HELP.md` referencia Spring Boot 4.0.6 mas o `pom.xml` usa 3.2.5. Documentação gerada está inconsistente.
-
-### 8. Bug de Validação no ServiceItemDTO
-
-`@Min(value = 5)` no campo `durationMinutes` mas a mensagem diz "duração mínima é de 15 minutos". Valor e mensagem inconsistentes.
-
-**Arquivo:** `domain/catalog/ServiceItemDTO.java`
-
-### 9. Sem Logging Estruturado
-
-O `GlobalExceptionHandler` tem um comentário placeholder: "Em um cenário real, aqui entraria um log.error". Nenhum framework de logging está configurado além do padrão Spring Boot.
-
-### 10. Verificação de TenantContext Inconsistente
-
-`ClientService` verifica se `tenantId` é null, mas `CatalogService` e `AppointmentService` não fazem a mesma verificação. Pode causar NPE ou vazamento de dados entre tenants.
-
-## Problemas Baixos 🟢
-
-### 11. Sem Configuração CORS
-
-Nenhuma configuração CORS encontrada. Requisições de um frontend em domínio diferente serão bloqueadas pelo browser.
-
-### 12. `.planning/` Não Está no .gitignore
-
-Artefatos do GSD podem ser commitados acidentalmente ao repositório.
-
-### 13. Sem Endpoint de Registro de Barbeiro
-
-Apenas login existe (`POST /api/v1/auth/login`). Não há endpoint para criar novos barbeiros via API. Provavelmente requer seed manual no banco.
-
-### 14. Verificação de Conflito de Agendamento Incompleta
-
-A validação de sobreposição de horários é por tenant mas não por barbeiro. Barbearias com múltiplos barbeiros podem ter falsos conflitos — um horário marcado com barbeiro A bloquearia o mesmo horário para barbeiro B.
-
-## Dívida Técnica
-
-| Item | Impacto | Esforço |
-|---|---|---|
-| Externalizar JWT secret | Alto | Baixo |
-| Adicionar testes | Alto | Alto |
-| Configurar CI/CD | Médio | Médio |
-| Criar README.md | Baixo | Baixo |
-| Corrigir bug validação DTO | Baixo | Baixo |
-| Configurar CORS | Médio | Baixo |
-| Consistência do TenantContext | Médio | Baixo |
-
----
-*Mapeado: 2026-05-21 via gsd-map-codebase*
+## 6. API Documentation
+- **No Swagger/OpenAPI**: The codebase lacks standard API documentation. Given this is a SaaS API backend, having an interactive API contract is crucial for frontend integration.
+  - **Recommendation**: Include `springdoc-openapi-starter-webmvc-ui` in the `pom.xml` to automatically generate the OpenAPI spec and Swagger UI.

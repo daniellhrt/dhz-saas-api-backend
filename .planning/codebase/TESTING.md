@@ -1,53 +1,48 @@
-# Testes — dhz-saas-api-backend
+# TESTING.md
 
-> Mapeado em: 2026-05-21
+## Overview
+This document describes the testing strategy, frameworks used, file locations, and how to execute tests in the `dhz-saas-api-backend` project.
 
-## Estado Atual
+## Testing Strategy
+The project relies on automated testing to ensure the correctness of the domain logic, controllers, and data access layer.
+- **Unit Testing (Services)**: Focused on business rules, anti-IDOR checks, conflict validations (e.g., double-booking), and state transformations. External dependencies like repositories are mocked.
+- **Web Layer Testing (Controllers)**: Focused on HTTP request validation (e.g., `@Valid`), JSON serialization/deserialization, and correct HTTP status code returns. The service layer is mocked, and security filters are explicitly disabled (`@AutoConfigureMockMvc(addFilters = false)`) to isolate the web layer behavior.
+- **Data Access Testing**: Includes repository layer testing with sliced contexts.
 
-🔴 **Cobertura de testes: praticamente zero.**
+## Frameworks & Libraries
+- **JUnit 5 (Jupiter)**: The primary test execution framework.
+- **Mockito**: Used extensively for mocking dependencies via annotations (`@Mock`, `@InjectMocks`, `@MockBean`).
+- **Spring Boot Test**: Provides annotations and utilities for slicing the application context (e.g., `@WebMvcTest`).
+- **MockMvc**: Used to perform mock HTTP requests and assert responses in controller tests (`status()`, `jsonPath()`).
 
-### Arquivo Único de Teste
+## Conventions & Structure
+- **Location**: Test files mirror the package structure of `src/main/java` and are located under `src/test/java/br/com/dht/apibackend/`.
+- **Structure**: Tests strictly follow the **AAA (Arrange, Act, Assert)** pattern, often explicitly separated by code comments (`// Arrange`, `// Act`, `// Assert`).
+- **Naming Convention**: Test methods describe the expected behavior and conditions using the pattern `should[Action/ExpectedResult]When[Condition]` (e.g., `shouldScheduleAppointmentSuccessfully`, `shouldThrowExceptionWhenClientNotFoundInTenant`, `shouldReturn400WhenDateIsInThePast`).
+- **Context Management**: Multitenant context is manually set up before tests and cleared after execution to prevent state leakage between tests. This is done using JUnit lifecycle hooks:
+  ```java
+  @BeforeEach
+  void setUp() {
+      TenantContext.setTenantId(TENANT_ID);
+  }
 
-`src/test/java/br/com/dht/apibackend/DhzSaasApiBackendApplicationTests.java`
+  @AfterEach
+  void tearDown() {
+      TenantContext.clear();
+  }
+  ```
 
-```java
-@SpringBootTest
-class DhzSaasApiBackendApplicationTests {
-    @Test
-    void contextLoads() {
-    }
-}
+## How to Run Tests
+Since this is a standard Maven project, tests can be executed from the command line using the included Maven wrapper.
+
+To run all tests:
+```bash
+./mvnw test
 ```
+*(On Windows Command Prompt or PowerShell, use `mvnw.cmd test`)*
 
-Este é o teste smoke gerado automaticamente pelo Spring Initializr. Verifica apenas que o contexto Spring carrega sem erros.
-
-## Framework de Testes Disponível
-
-| Dependência | Versão | Escopo |
-|---|---|---|
-| `spring-boot-starter-test` | BOM (3.2.5) | test |
-| `spring-security-test` | BOM | test |
-
-**Inclui:** JUnit 5, Mockito, AssertJ, Spring Test, MockMvc, `@WebMvcTest`, `@DataJpaTest`, `@SpringBootTest`
-
-## O Que Não Existe
-
-- ❌ Testes unitários para Services
-- ❌ Testes unitários para Controllers (MockMvc)
-- ❌ Testes de integração para Repositories
-- ❌ Testes de segurança (autenticação JWT)
-- ❌ Testes de validação de DTOs
-- ❌ Testes de multi-tenancy (isolamento de dados)
-- ❌ Testes de conflito de agendamento
-- ❌ CI/CD pipeline para rodar testes
-- ❌ Configuração de cobertura (JaCoCo, etc.)
-
-## Recomendações Prioritárias
-
-1. **Testes de Service** — Lógica de negócio (agendamentos, conflitos, validações de tenant)
-2. **Testes de Controller** — MockMvc para endpoints REST, validação de DTOs
-3. **Testes de Segurança** — JWT validation, acesso não autorizado, isolamento de tenant
-4. **Testes de Repository** — Queries customizadas com `@DataJpaTest` + H2
-
----
-*Mapeado: 2026-05-21 via gsd-map-codebase*
+To run a specific test class:
+```bash
+./mvnw test -Dtest=AppointmentServiceTest
+```
+*(On Windows Command Prompt or PowerShell, use `mvnw.cmd test -Dtest=AppointmentServiceTest`)*

@@ -1,117 +1,66 @@
-# Estrutura — dhz-saas-api-backend
+# Directory Structure
 
-> Mapeado em: 2026-05-21
+This document maps out the core directory structure of the application and the responsibilities of each module.
 
-## Layout do Diretório
+## High-Level Layout
 
-```
+```text
 dhz-saas-api-backend/
-├── .gitattributes                        # Line endings para Maven wrapper
-├── .gitignore                            # Spring Initializr padrão
-├── .mvn/                                 # Maven Wrapper
-├── compose.yaml                          # Docker Compose (PostgreSQL 16)
-├── HELP.md                               # Docs gerados pelo Spring Initializr
-├── mvnw / mvnw.cmd                       # Maven Wrapper scripts
-├── pom.xml                               # Maven POM (Spring Boot 3.2.5, Java 21)
-├── src/
-│   ├── main/
-│   │   ├── java/br/com/dht/apibackend/
-│   │   │   ├── DhzSaasApiBackendApplication.java     # Entry point
-│   │   │   ├── config/
-│   │   │   │   ├── JwtProperties.java                # @ConfigurationProperties JWT
-│   │   │   │   └── TenantContext.java                # ThreadLocal tenant holder
-│   │   │   ├── domain/
-│   │   │   │   ├── appointment/
-│   │   │   │   │   ├── Appointment.java              # Entity
-│   │   │   │   │   ├── AppointmentController.java    # POST /api/v1/appointments
-│   │   │   │   │   ├── AppointmentDTO.java           # Request/Response records
-│   │   │   │   │   ├── AppointmentRepository.java    # JPA + overlap query
-│   │   │   │   │   ├── AppointmentService.java       # Agendamento + anti-IDOR
-│   │   │   │   │   └── AppointmentStatus.java        # Enum (PENDING/CONFIRMED/COMPLETED/CANCELED)
-│   │   │   │   ├── barber/
-│   │   │   │   │   ├── Barber.java                   # Entity (tenant owner)
-│   │   │   │   │   └── BarberRepository.java         # findByEmail
-│   │   │   │   ├── catalog/
-│   │   │   │   │   ├── CatalogController.java        # CRUD /api/v1/catalog
-│   │   │   │   │   ├── CatalogService.java           # Lógica de catálogo
-│   │   │   │   │   ├── ServiceItem.java              # Entity (preço, duração, ativo)
-│   │   │   │   │   ├── ServiceItemDTO.java           # Request/Response records
-│   │   │   │   │   └── ServiceItemRepository.java    # Queries com tenant
-│   │   │   │   └── client/
-│   │   │   │       ├── Client.java                   # Entity
-│   │   │   │       ├── ClientController.java         # CRUD /api/v1/clients
-│   │   │   │       ├── ClientDTO.java                # Request/Response records
-│   │   │   │       ├── ClientRepository.java         # Queries com tenant
-│   │   │   │       └── ClientService.java            # Lógica + null check tenant
-│   │   │   ├── exception/
-│   │   │   │   ├── GlobalExceptionHandler.java       # @RestControllerAdvice
-│   │   │   │   └── StandardError.java                # Error response DTO
-│   │   │   └── security/
-│   │   │       ├── AuthController.java               # POST /api/v1/auth/login
-│   │   │       ├── AuthService.java                  # Login + JWT generation
-│   │   │       ├── SecurityConfig.java               # Spring Security config
-│   │   │       ├── SecurityFilter.java               # JWT filter + TenantContext
-│   │   │       ├── TokenService.java                 # JWT create/validate
-│   │   │       └── dto/
-│   │   │           └── AuthDTO.java                  # LoginRequest/TokenResponse
-│   │   └── resources/
-│   │       ├── application.yml                       # Config (JWT, profiles, JPA)
-│   │       ├── db/migration/
-│   │       │   ├── V1__create_table_clients.sql
-│   │       │   ├── V2__create_table_barbers.sql
-│   │       │   ├── V3__create_table_service_items.sql
-│   │       │   └── V4__create_table_appointments.sql
-│   │       ├── static/                               # (vazio)
-│   │       └── templates/                            # (vazio)
-│   └── test/
-│       └── java/br/com/dht/apibackend/
-│           └── DhzSaasApiBackendApplicationTests.java  # Smoke test apenas
-└── target/                                           # Build output
+├── .planning/                  # Project planning and architecture documents
+├── src/main/java/              # Application source code
+├── src/main/resources/         # Application properties and database migrations
+├── src/test/                   # Unit and integration tests
+├── pom.xml                     # Maven configuration and dependencies
+└── compose.yaml                # Docker Compose file for local dependencies (PostgreSQL)
 ```
 
-## Inventário de Arquivos
+## Source Code Map (`src/main/java/br/com/dht/apibackend/`)
 
-| Tipo | Quantidade | Localização |
-|---|---|---|
-| Java (main) | 26 | `src/main/java/br/com/dht/apibackend/` |
-| Java (test) | 1 | `src/test/java/br/com/dht/apibackend/` |
-| SQL Migrations | 4 | `src/main/resources/db/migration/` |
-| Config | 1 | `src/main/resources/application.yml` |
-| Docker | 1 | `compose.yaml` |
-| Maven | 3 | `pom.xml`, `mvnw`, `mvnw.cmd` |
-| **Total** | **36** | — |
+The source code is primarily organized by **Domain (Feature)**, keeping related controllers, services, repositories, and models together. Cross-cutting concerns are organized by technical function.
 
-## Locais Chave
+### `config/`
+Cross-cutting configurations and context holders.
+- **`TenantContext`**: A `ThreadLocal` wrapper that stores the current request's tenant ID, providing data isolation across the application.
+- **`JwtProperties`**: Maps JWT configuration properties from `application.yml`.
 
-| O que procurar | Onde encontrar |
-|---|---|
-| Entry point | `DhzSaasApiBackendApplication.java` |
-| Configuração JWT | `config/JwtProperties.java` + `application.yml` |
-| Tenant isolation | `config/TenantContext.java` + `security/SecurityFilter.java` |
-| Nova entity/domínio | `domain/[nome]/` (seguir padrão existente) |
-| Novo endpoint | `domain/[nome]/[Nome]Controller.java` |
-| Regras de negócio | `domain/[nome]/[Nome]Service.java` |
-| Erros globais | `exception/GlobalExceptionHandler.java` |
-| Migrações de banco | `src/main/resources/db/migration/V[N]__*.sql` |
-| Segurança | `security/SecurityConfig.java` |
-| Docker | `compose.yaml` |
+### `domain/`
+The core business capabilities of the application.
 
-## Convenções de Nomes
+#### `domain/appointment/`
+Manages the scheduling lifecycle.
+- **Responsibilities**: Booking appointments, validating anti-IDOR checks (ensuring client/service belong to the tenant), calculating service end times, and preventing double-booking conflicts.
+- **Key Components**: `Appointment` (Entity), `AppointmentController`, `AppointmentService`, `AppointmentRepository`, `AppointmentDTO`.
 
-| Elemento | Padrão | Exemplo |
-|---|---|---|
-| Package | `domain.[domínio]` | `domain.appointment` |
-| Entity | `[Nome]` | `Appointment.java` |
-| Controller | `[Nome]Controller` | `AppointmentController.java` |
-| Service | `[Nome]Service` | `AppointmentService.java` |
-| Repository | `[Nome]Repository` | `AppointmentRepository.java` |
-| DTO | `[Nome]DTO` (wrapper) | `AppointmentDTO.java` |
-| DTO Request | `[Nome]DTO.Request` (record) | `AppointmentDTO.Request` |
-| DTO Response | `[Nome]DTO.Response` (record) | `AppointmentDTO.Response` |
-| Migration | `V[N]__[descrição].sql` | `V4__create_table_appointments.sql` |
-| API path | `/api/v1/[recurso]` | `/api/v1/appointments` |
-| Tabela SQL | plural lowercase | `appointments` |
-| Coluna SQL | snake_case | `tenant_id`, `start_time` |
+#### `domain/barber/`
+Manages the barbershop owners (the users of the system).
+- **Responsibilities**: Storing barber profiles and hashed credentials. The barber entity typically represents the tenant owner.
+- **Key Components**: `Barber` (Entity), `BarberRepository`.
 
----
-*Mapeado: 2026-05-21 via gsd-map-codebase*
+#### `domain/catalog/`
+Manages the services offered by the barbershop.
+- **Responsibilities**: Handling the catalog of services (e.g., Haircut, Beard Trim), including prices, durations, and active status.
+- **Key Components**: `ServiceItem` (Entity), `CatalogController`, `CatalogService`, `ServiceItemRepository`.
+
+#### `domain/client/`
+Manages the barbershop's customers.
+- **Responsibilities**: Storing and retrieving customer information (name, phone, email) specific to a tenant.
+- **Key Components**: `Client` (Entity), `ClientController`, `ClientService`, `ClientRepository`.
+
+### `exception/`
+Global error handling mechanics.
+- **Responsibilities**: Intercepting exceptions thrown by controllers or services and converting them into predictable, standardized HTTP responses.
+- **Key Components**: `GlobalExceptionHandler`, `StandardError`.
+
+### `security/`
+Authentication and Authorization.
+- **Responsibilities**: Handling login requests, validating passwords, issuing JWTs, and intercepting incoming requests to establish the Security and Tenant contexts.
+- **Key Components**: 
+  - `AuthController` & `AuthService`: Entry points for login and token generation.
+  - `SecurityFilter`: Extracts the JWT, validates it, and injects the `tenantId` into the `TenantContext`.
+  - `TokenService`: Utility for generating and parsing JWTs.
+  - `SecurityConfig`: Spring Security filter chain configuration.
+
+## Resources Map (`src/main/resources/`)
+
+- **`application.yml` / `application-prod.yml`**: Spring Boot configuration profiles.
+- **`db/migration/`**: Flyway SQL migration scripts that define the database schema (e.g., `V1__create_table_clients.sql`, `V2__create_table_barbers.sql`).

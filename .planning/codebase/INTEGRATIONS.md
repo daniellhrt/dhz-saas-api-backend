@@ -1,62 +1,15 @@
-# Integrações — dhz-saas-api-backend
+# Integrations & External Services
 
-> Mapeado em: 2026-05-21
+## Databases
+- **PostgreSQL**: The primary relational database system used in production (version `16-alpine` via Docker). The application connects to it using Spring Data JPA and standard JDBC.
+- **H2 Database**: Used as an in-memory database fallback for local development and automated testing.
 
-## Banco de Dados
+## Infrastructure & Orchestration
+- **Docker & Docker Compose**: The project relies on a `compose.yaml` file to orchestrate the API and the PostgreSQL database. The application leverages `spring-boot-docker-compose` to automatically manage the database lifecycle during development.
 
-### PostgreSQL 16 (Alpine)
+## Third-Party APIs
+- *No external third-party HTTP APIs (such as payment gateways like Stripe, or communication services like Twilio/SendGrid) are currently integrated into this repository.*
 
-- **Conexão:** Docker Compose local (porta 5432)
-- **Database:** `barberdb`
-- **Credenciais:** `admin` / `adminpassword` (apenas dev)
-- **Driver:** `org.postgresql` (runtime)
-- **ORM:** Spring Data JPA + Hibernate
-- **Migrações:** Flyway (`src/main/resources/db/migration/`)
-
-### H2 (Runtime)
-
-- Disponível como dependência runtime
-- Provável uso para testes ou fallback
-- Sem configuração explícita encontrada
-
-## Autenticação
-
-### JWT (JJWT 0.12.5)
-
-- **Tipo:** Bearer token no header `Authorization`
-- **Signing:** HMAC-SHA com chave secreta
-- **Claims:** email (subject) + tenantId (customizado)
-- **Expiração:** 24 horas
-- **Endpoint:** `POST /api/v1/auth/login`
-- **Senha:** BCrypt hash
-
-## Multi-Tenancy
-
-### Row-Level Isolation
-
-- **Estratégia:** Coluna `tenant_id` em todas as tabelas
-- **Contexto:** `TenantContext` (ThreadLocal) populado a partir do JWT
-- **Ciclo de vida:** Set no `SecurityFilter`, limpo no `finally` block
-- **Sem tenant resolver de URL/header** — tenant vem exclusivamente do JWT
-
-## Integrações Externas
-
-**Nenhuma integração externa detectada.**
-
-Não foram encontrados:
-- ❌ APIs externas (REST clients, WebClient, Feign)
-- ❌ Mensageria (Kafka, RabbitMQ, SQS)
-- ❌ Cache (Redis, Caffeine)
-- ❌ Storage (S3, GCS, Azure Blob)
-- ❌ Email (SMTP, SendGrid, SES)
-- ❌ Monitoramento (Actuator, Micrometer, Prometheus)
-- ❌ Logging centralizado (ELK, CloudWatch)
-- ❌ OAuth/SSO providers
-- ❌ Webhooks
-
-## Observações
-
-O projeto está em estágio inicial — apenas infraestrutura básica (DB + Auth + CRUD). Não há integrações com serviços externos, o que é esperado para um MVP em desenvolvimento.
-
----
-*Mapeado: 2026-05-21 via gsd-map-codebase*
+## Identity & Access Management
+- *No external Identity Provider (IdP) such as Keycloak, Auth0, or AWS Cognito is used.* 
+- Authentication is handled internally by the application using custom-signed JWTs (JSON Web Tokens) with a secret key provided via environment variables (`JWT_SECRET`).
