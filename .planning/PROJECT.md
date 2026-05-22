@@ -8,33 +8,38 @@ Sistema de backend multilocatário (multi-tenant) para gestão de barbearias. A 
 
 Isolamento seguro de dados entre barbearias (multi-tenancy) e estabilidade da API, garantindo que as operações essenciais (agendamentos e catálogo) ocorram de forma previsível e sem falhas de concorrência.
 
+## Current State
+
+**Shipped:** v1.0 Infra & Testing (2026-05-22)
+- ~3.000 LOC Java 21 / Spring Boot 3.2.5
+- 31 classes Java, 5 classes de teste, 4 migrations Flyway
+- API multi-tenant com JWT, rate limiting, Docker, CI via GitHub Actions
+- 13/13 requisitos cobertos e verificados via UAT
+
 ## Requirements
 
 ### Validated
 
-<!-- Shipped and confirmed valuable. -->
-
-- ✓ Autenticação de barbeiros via JWT com isolamento por tenant — existing
-- ✓ Gestão de clientes (CRUD com validações e isolamento) — existing
-- ✓ Gestão do catálogo de serviços (preço, duração e desativação lógica) — existing
-- ✓ Sistema de agendamentos com validação de double-booking — existing
+- ✓ Autenticação de barbeiros via JWT com isolamento por tenant — v1.0
+- ✓ Gestão de clientes (CRUD com validações e isolamento) — v1.0
+- ✓ Gestão do catálogo de serviços (preço, duração e desativação lógica) — v1.0
+- ✓ Sistema de agendamentos com validação de double-booking — v1.0
+- ✓ Segredos externalizados via variáveis de ambiente (JWT, DB) — v1.0
+- ✓ Dockerfile multi-stage + compose.yaml — v1.0
+- ✓ Testes unitários (Service), integração (Controller), repositório (H2) — v1.0
+- ✓ GitHub Actions CI funcional — v1.0
 
 ### Active
 
-<!-- Current scope. Building toward these. -->
-
-- [ ] Implementar cobertura completa de testes (unitários e integração) para Services e Controllers.
-- [ ] Externalizar segredos de infraestrutura (JWT secret, senhas do banco) para uso em múltiplos ambientes via variáveis de ambiente.
-- [ ] Preparar infraestrutura de deploy containerizada (Docker) para publicação na nuvem (AWS/DigitalOcean/Render).
-- [ ] Configurar versionamento no GitHub, preparando o terreno para futuros pipelines de CI.
-- [ ] Corrigir dívidas técnicas identificadas no código (ex: bug de validação no DTO de serviço).
+- [ ] Endpoints de registro de barbeiros (CRUD de usuários)
+- [ ] Cobertura de testes para domínios Client e Catalog
+- [ ] Rate limiting escalável (Redis/Bucket4j distribuído)
+- [ ] Gerenciamento de status de agendamentos (confirmar, cancelar, concluir)
 
 ### Out of Scope
 
-<!-- Explicit boundaries. Includes reasoning to prevent re-adding. -->
-
-- Adição de novos fluxos de negócio na V1 — O foco atual deve ser na estabilização, testes e infraestrutura para garantir que a base atual suporte crescimento seguro.
-- CI/CD complexo no momento — Apenas a base de infra (Docker/env) e repositório serão configurados; automações avançadas de deploy ficam para quando o ambiente alvo for definitivamente escolhido.
+- Adição de novos fluxos de negócio complexos — Foco em evoluir a base atual
+- Deploy contínuo (CD) automatizado — O ambiente alvo final ainda não está provisionado
 
 ## Context
 
@@ -74,4 +79,4 @@ This document evolves at phase transitions and milestone boundaries.
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state
 ---
-*Last updated: 2026-05-21 after initialization*
+*Last updated: 2026-05-22 after v1.0 milestone*
