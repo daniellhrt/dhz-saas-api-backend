@@ -16,6 +16,16 @@ Isolamento seguro de dados entre barbearias (multi-tenancy) e estabilidade da AP
 - API multi-tenant com JWT, rate limiting, Docker, CI via GitHub Actions
 - 13/13 requisitos cobertos e verificados via UAT
 
+## Current Milestone: v1.1 Evolução da API
+
+**Goal:** Expandir a API com novos endpoints de negócio, escalar infraestrutura e aumentar cobertura de testes.
+
+**Target features:**
+- Registro de barbeiros (CRUD) — atualmente só existe login
+- Gestão de status de agendamentos (confirmar, cancelar, concluir)
+- Rate limiting distribuído com Redis
+- Testes para Client e Catalog
+
 ## Requirements
 
 ### Validated
@@ -29,17 +39,17 @@ Isolamento seguro de dados entre barbearias (multi-tenancy) e estabilidade da AP
 - ✓ Testes unitários (Service), integração (Controller), repositório (H2) — v1.0
 - ✓ GitHub Actions CI funcional — v1.0
 
-### Active
+### Active (v1.1)
 
-- [ ] Endpoints de registro de barbeiros (CRUD de usuários)
-- [ ] Cobertura de testes para domínios Client e Catalog
-- [ ] Rate limiting escalável (Redis/Bucket4j distribuído)
-- [ ] Gerenciamento de status de agendamentos (confirmar, cancelar, concluir)
+- [ ] Barbeiro pode se registrar com email e senha (CRUD)
+- [ ] Barbeiro pode confirmar, cancelar e concluir agendamentos
+- [ ] Rate limiting distribuído via Redis para escalar horizontalmente
+- [ ] Testes unitários e de integração para domínios Client e Catalog
 
 ### Out of Scope
 
-- Adição de novos fluxos de negócio complexos — Foco em evoluir a base atual
 - Deploy contínuo (CD) automatizado — O ambiente alvo final ainda não está provisionado
+- Novos domínios de negócio (ex: financeiro, relatórios) — Foco em evoluir a base atual
 
 ## Context
 
@@ -79,4 +89,4 @@ This document evolves at phase transitions and milestone boundaries.
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state
 ---
-*Last updated: 2026-05-22 after v1.0 milestone*
+*Last updated: 2026-05-22 after starting v1.1 milestone*
