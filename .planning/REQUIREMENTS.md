@@ -7,22 +7,22 @@
 
 ### Registro de Barbeiros
 
-- [ ] **REG-01**: Barbeiro pode criar conta com nome, email e senha
-- [ ] **REG-02**: Barbeiro pode listar todos os barbeiros da sua barbearia (tenant)
-- [ ] **REG-03**: Barbeiro pode atualizar seus próprios dados
-- [ ] **REG-04**: Barbeiro pode deletar sua conta
+- [x] **REG-01**: Barbeiro pode criar conta com nome, email e senha
+- [x] **REG-02**: Barbeiro pode listar todos os barbeiros da sua barbearia (tenant)
+- [x] **REG-03**: Barbeiro pode atualizar seus próprios dados
+- [x] **REG-04**: Barbeiro pode deletar sua conta
 
 ### Gestão de Agendamentos
 
-- [ ] **STATUS-01**: Barbeiro pode confirmar um agendamento pendente
-- [ ] **STATUS-02**: Barbeiro pode cancelar um agendamento (com motivo opcional)
-- [ ] **STATUS-03**: Barbeiro pode concluir um agendamento
+- [x] **STATUS-01**: Barbeiro pode confirmar um agendamento pendente
+- [x] **STATUS-02**: Barbeiro pode cancelar um agendamento (com motivo opcional)
+- [x] **STATUS-03**: Barbeiro pode concluir um agendamento
 
 ### Rate Limiting Distribuído
 
-- [ ] **RL-01**: Adicionar dependência do Redis (Spring Data Redis + Bucket4j Redis)
-- [ ] **RL-02**: Substituir ConcurrentHashMap por bucket distribuído no Redis
-- [ ] **RL-03**: Adicionar Redis ao compose.yaml
+- [x] **RL-01**: Adicionar dependência do Redis (Bucket4j Redis + Lettuce)
+- [x] **RL-02**: Substituir ConcurrentHashMap por bucket distribuído no Redis com fallback em memória
+- [x] **RL-03**: Adicionar Redis ao compose.yaml
 
 ### Testes
 
@@ -46,16 +46,16 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REG-01 | - | Pending |
-| REG-02 | - | Pending |
-| REG-03 | - | Pending |
-| REG-04 | - | Pending |
-| STATUS-01 | - | Pending |
-| STATUS-02 | - | Pending |
-| STATUS-03 | - | Pending |
-| RL-01 | - | Pending |
-| RL-02 | - | Pending |
-| RL-03 | - | Pending |
+| REG-01 | 3 | Done |
+| REG-02 | 3 | Done |
+| REG-03 | 3 | Done |
+| REG-04 | 3 | Done |
+| STATUS-01 | 4 | Done |
+| STATUS-02 | 4 | Done |
+| STATUS-03 | 4 | Done |
+| RL-01 | 5 | Done |
+| RL-02 | 5 | Done |
+| RL-03 | 5 | Done |
 | TEST-06 | - | Pending |
 | TEST-07 | - | Pending |
 | TEST-08 | - | Pending |
@@ -63,8 +63,8 @@
 
 **Coverage:**
 - v1.1 requirements: 14 total
-- Mapped to phases: 0
-- Unmapped: 14 ⚠️
+- Mapped to phases: 7
+- Unmapped: 7 ⚠️
 
 ---
 *Requirements defined: 2026-05-22*

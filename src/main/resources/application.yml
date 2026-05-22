@@ -3,17 +3,15 @@ spring:
   application:
     name: dhz-saas-api-backend
   profiles:
-    active: dev # Perfil padrão
+    active: dev
 
-# Configurações do domínio de segurança da aplicação
 app:
   security:
     jwt:
-      secret: ${JWT_SECRET} # Carregado obrigatoriamente do ambiente (.env ou SO)
-      expiration-ms: 86400000 # 24 horas
+      secret: ${JWT_SECRET}
+      expiration-ms: 86400000
 
 ---
-# Perfil de Desenvolvimento
 spring:
   config:
     activate:
@@ -21,7 +19,11 @@ spring:
   docker:
     compose:
       enabled: true
-      lifecycle-management: start-and-stop # Inicia o banco ao rodar a API, desliga ao parar a API
+      lifecycle-management: start-and-stop
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
   jpa:
     hibernate:
       ddl-auto: validate
@@ -29,3 +31,13 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379

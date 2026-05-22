@@ -30,7 +30,7 @@ public class AuthService {
             throw new InvalidCredentialsException("Credenciais inválidas.");
         }
 
-        String jwt = tokenService.generateToken(barber.getEmail(), barber.getTenantId());
+        String jwt = tokenService.generateToken(barber.getEmail(), barber.getTenantId(), barber.getRole().name());
 
         return new AuthDTO.TokenResponse(jwt, "Bearer");
     }

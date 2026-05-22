@@ -16,8 +16,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -34,12 +35,13 @@ public class SecurityFilter extends OncePerRequestFilter {
             if (token != null && tokenService.isTokenValid(token)) {
                 String email = tokenService.getEmailFromToken(token);
                 String tenantId = tokenService.getTenantIdFromToken(token);
+                String role = tokenService.getRoleFromToken(token);
 
-                // 1. Injeta o TenantId na Thread atual (Nossa blindagem de banco de dados)
                 TenantContext.setTenantId(tenantId);
 
-                // 2. Avisa o Spring Security que o usuário está autenticado
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(email, null, Collections.emptyList());
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        email, null, List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
 

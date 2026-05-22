@@ -23,15 +23,17 @@ public class TokenService {
 
     private final JwtProperties jwtProperties;
     private static final String TENANT_CLAIM = "tenantId";
+    private static final String ROLE_CLAIM = "role";
 
     private SecretKey getSecretKey() {
         return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String email, String tenantId) {
+    public String generateToken(String email, String tenantId, String role) {
         return Jwts.builder()
                 .subject(email)
                 .claim(TENANT_CLAIM, tenantId)
+                .claim(ROLE_CLAIM, role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpirationMs()))
                 .signWith(getSecretKey())
@@ -53,6 +55,10 @@ public class TokenService {
 
     public String getTenantIdFromToken(String token) {
         return getClaims(token).get(TENANT_CLAIM, String.class);
+    }
+
+    public String getRoleFromToken(String token) {
+        return getClaims(token).get(ROLE_CLAIM, String.class);
     }
 
     private Claims getClaims(String token) {

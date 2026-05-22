@@ -1,6 +1,6 @@
 /**
  * Propósito: Mapeamento ORM da tabela de agendamentos.
- * Responsabilidade: Relacionar o Cliente, o Serviço e o bloco de tempo.
+ * Responsabilidade: Relacionar o Cliente, o Serviço e o bloco de tempo, com controle de status.
  * Papel na Arquitetura: Domain / Entity.
  */
 package br.com.dht.apibackend.domain.appointment;
@@ -28,12 +28,10 @@ public class Appointment {
     @Column(name = "tenant_id", nullable = false, updatable = false)
     private String tenantId;
 
-    // Muitos agendamentos podem pertencer a um cliente
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    // Muitos agendamentos podem usar o mesmo serviço
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_item_id", nullable = false)
     private ServiceItem serviceItem;
@@ -48,6 +46,10 @@ public class Appointment {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AppointmentStatus status;
+
+    @Setter
+    @Column(name = "cancel_reason")
+    private String cancelReason;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

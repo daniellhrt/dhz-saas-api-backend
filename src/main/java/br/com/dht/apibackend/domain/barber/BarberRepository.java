@@ -5,6 +5,8 @@
  */
 package br.com.dht.apibackend.domain.barber;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +15,12 @@ import java.util.UUID;
 
 @Repository
 public interface BarberRepository extends JpaRepository<Barber, UUID> {
-    // Busca o barbeiro pelo e-mail global para realizar o login
+
     Optional<Barber> findByEmail(String email);
+
+    Optional<Barber> findByIdAndTenantId(UUID id, String tenantId);
+
+    Page<Barber> findAllByTenantId(String tenantId, Pageable pageable);
+
+    boolean existsByIdAndTenantId(UUID id, String tenantId);
 }

@@ -17,9 +17,9 @@
 
 ### 🚧 v1.1 Evolução da API (In Progress)
 
-- [ ] **Phase 3: Registro de Barbeiros** — Criar CRUD completo de barbeiros com endpoint de cadastro
-- [ ] **Phase 4: Gestão de Status de Agendamentos** — Endpoints para confirmar, cancelar e concluir agendamentos
-- [ ] **Phase 5: Rate Limiting Distribuído** — Substituir cache local por Redis + Bucket4j
+- [x] **Phase 3: Registro de Barbeiros** — Criar CRUD completo de barbeiros com endpoint de cadastro
+- [x] **Phase 4: Gestão de Status de Agendamentos** — Endpoints para confirmar, cancelar e concluir agendamentos
+- [x] **Phase 5: Rate Limiting Distribuído** — Substituir cache local por Redis + Bucket4j
 - [ ] **Phase 6: Testes para Client e Catalog** — Cobertura de testes nos domínios faltantes
 
 ## Progress
@@ -28,9 +28,9 @@
 |-------|-----------|-------------|--------|
 | 1. Configuração Segura & Dockerização | v1.0 | SEC/DOCK | Complete |
 | 2. Base de Testes e CI Workflow | v1.0 | TEST/CICD | Complete |
-| 3. Registro de Barbeiros | v1.1 | REG-01..04 | Not started |
-| 4. Gestão de Status de Agendamentos | v1.1 | STATUS-01..03 | Not started |
-| 5. Rate Limiting Distribuído | v1.1 | RL-01..03 | Not started |
+| 3. Registro de Barbeiros | v1.1 | REG-01..04 | Complete |
+| 4. Gestão de Status de Agendamentos | v1.1 | STATUS-01..03 | Complete |
+| 5. Rate Limiting Distribuído | v1.1 | RL-01..03 | Complete |
 | 6. Testes para Client e Catalog | v1.1 | TEST-06..09 | Not started |
 
 ---

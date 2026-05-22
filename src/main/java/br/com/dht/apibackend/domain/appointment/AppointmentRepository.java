@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -19,6 +20,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     // Lógica de Overlap: Se o novo início for ANTES de um fim existente, 
     // E o novo fim for DEPOIS de um início existente, há conflito.
     // Ignora agendamentos cancelados.
+    Optional<Appointment> findByIdAndTenantId(UUID id, String tenantId);
+
     @Query("""
            SELECT COUNT(a) > 0 FROM Appointment a 
            WHERE a.tenantId = :tenantId 

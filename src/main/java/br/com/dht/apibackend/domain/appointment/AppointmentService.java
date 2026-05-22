@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,11 +29,9 @@ public class AppointmentService {
     public AppointmentDTO.Response scheduleAppointment(AppointmentDTO.Request request) {
         String currentTenant = TenantContext.getTenantId();
 
-        // 1. Validação Anti-IDOR: O cliente pertence a esta barbearia?
         Client client = clientRepository.findByIdAndTenantId(request.clientId(), currentTenant)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado."));
 
-        // 2. Validação Anti-IDOR: O serviço pertence a esta barbearia e está ativo?
         ServiceItem serviceItem = serviceItemRepository.findByIdAndTenantId(request.serviceItemId(), currentTenant)
                 .orElseThrow(() -> new IllegalArgumentException("Serviço não encontrado."));
 
@@ -40,19 +39,62 @@ public class AppointmentService {
             throw new IllegalStateException("Não é possível agendar um serviço inativo.");
         }
 
-        // 3. Calcula o horário de término baseado na duração do serviço
         LocalDateTime startTime = request.startTime();
         LocalDateTime endTime = startTime.plusMinutes(serviceItem.getDurationMinutes());
 
-        // 4. Validação de Conflito de Horário (Double-Booking)
         if (appointmentRepository.hasOverlappingAppointment(currentTenant, startTime, endTime)) {
             throw new IllegalStateException("Já existe um agendamento conflitante neste horário.");
         }
 
-        // 5. Persiste a entidade
         Appointment newAppointment = new Appointment(currentTenant, client, serviceItem, startTime, endTime);
         Appointment savedAppointment = appointmentRepository.save(newAppointment);
 
         return AppointmentDTO.Response.fromEntity(savedAppointment);
+    }
+
+    @Transactional
+    public AppointmentDTO.Response confirmAppointment(UUID id) {
+        Appointment appointment = findAppointmentForTenant(id);
+
+        if (appointment.getStatus() != AppointmentStatus.PENDING) {
+            throw new IllegalStateException("Apenas agendamentos pendentes podem ser confirmados.");
+        }
+
+        appointment.setStatus(AppointmentStatus.CONFIRMED);
+        return AppointmentDTO.Response.fromEntity(appointment);
+    }
+
+    @Transactional
+    public AppointmentDTO.Response cancelAppointment(UUID id, String reason) {
+        Appointment appointment = findAppointmentForTenant(id);
+
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new IllegalStateException("Agendamentos concluídos não podem ser cancelados.");
+        }
+        if (appointment.getStatus() == AppointmentStatus.CANCELED) {
+            throw new IllegalStateException("Agendamento já está cancelado.");
+        }
+
+        appointment.setStatus(AppointmentStatus.CANCELED);
+        appointment.setCancelReason(reason);
+        return AppointmentDTO.Response.fromEntity(appointment);
+    }
+
+    @Transactional
+    public AppointmentDTO.Response completeAppointment(UUID id) {
+        Appointment appointment = findAppointmentForTenant(id);
+
+        if (appointment.getStatus() != AppointmentStatus.CONFIRMED) {
+            throw new IllegalStateException("Apenas agendamentos confirmados podem ser concluídos.");
+        }
+
+        appointment.setStatus(AppointmentStatus.COMPLETED);
+        return AppointmentDTO.Response.fromEntity(appointment);
+    }
+
+    private Appointment findAppointmentForTenant(UUID id) {
+        String currentTenant = TenantContext.getTenantId();
+        return appointmentRepository.findByIdAndTenantId(id, currentTenant)
+                .orElseThrow(() -> new IllegalArgumentException("Agendamento não encontrado."));
     }
 }

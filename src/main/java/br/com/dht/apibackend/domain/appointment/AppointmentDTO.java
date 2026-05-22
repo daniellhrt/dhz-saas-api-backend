@@ -17,13 +17,18 @@ public class AppointmentDTO {
             @NotNull(message = "A data e hora de início são obrigatórias") @Future(message = "O agendamento deve ser no futuro") LocalDateTime startTime
     ) {}
 
+    public record CancelRequest(
+            String reason
+    ) {}
+
     public record Response(
             UUID id,
             String clientName,
             String serviceName,
             LocalDateTime startTime,
             LocalDateTime endTime,
-            String status
+            String status,
+            String cancelReason
     ) {
         public static Response fromEntity(Appointment app) {
             return new Response(
@@ -32,7 +37,8 @@ public class AppointmentDTO {
                     app.getServiceItem().getName(),
                     app.getStartTime(),
                     app.getEndTime(),
-                    app.getStatus().name()
+                    app.getStatus().name(),
+                    app.getCancelReason()
             );
         }
     }
