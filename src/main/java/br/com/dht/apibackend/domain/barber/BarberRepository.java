@@ -1,3 +1,8 @@
+/**
+ * Propósito: Comunicação com o banco de dados para a entidade Barber.
+ * Responsabilidade: Prover acesso ao repositório de barbeiros para autenticação.
+ * Papel na Arquitetura: Domain / Repository.
+ */
 package br.com.dht.apibackend.domain.barber;
 
 import org.springframework.data.jpa.repository.JpaRepository;

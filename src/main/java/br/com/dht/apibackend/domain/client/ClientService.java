@@ -7,10 +7,10 @@ package br.com.dht.apibackend.domain.client;
 
 import br.com.dht.apibackend.config.TenantContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,12 +38,10 @@ public class ClientService {
     }
 
     @Transactional(readOnly = true)
-    public List<ClientDTO.Response> listAllClients() {
+    public Page<ClientDTO.Response> listAllClients(Pageable pageable) {
         String currentTenant = TenantContext.getTenantId();
 
-        return clientRepository.findAllByTenantId(currentTenant)
-                .stream()
-                .map(ClientDTO.Response::fromEntity)
-                .toList();
+        return clientRepository.findAllByTenantId(currentTenant, pageable)
+                .map(ClientDTO.Response::fromEntity);
     }
 }

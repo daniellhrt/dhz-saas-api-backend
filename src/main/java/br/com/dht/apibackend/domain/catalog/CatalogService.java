@@ -7,10 +7,11 @@ package br.com.dht.apibackend.domain.catalog;
 
 import br.com.dht.apibackend.config.TenantContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -39,11 +40,9 @@ public class CatalogService {
     }
 
     @Transactional(readOnly = true)
-    public List<ServiceItemDTO.Response> listActiveServices() {
-        return repository.findAllByTenantIdAndActiveTrue(TenantContext.getTenantId())
-                .stream()
-                .map(ServiceItemDTO.Response::fromEntity)
-                .toList();
+    public Page<ServiceItemDTO.Response> listActiveServices(Pageable pageable) {
+        return repository.findAllByTenantIdAndActiveTrue(TenantContext.getTenantId(), pageable)
+                .map(ServiceItemDTO.Response::fromEntity);
     }
 
     @Transactional

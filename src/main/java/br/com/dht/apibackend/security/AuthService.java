@@ -7,6 +7,7 @@ package br.com.dht.apibackend.security;
 
 import br.com.dht.apibackend.domain.barber.Barber;
 import br.com.dht.apibackend.domain.barber.BarberRepository;
+import br.com.dht.apibackend.exception.InvalidCredentialsException;
 import br.com.dht.apibackend.security.dto.AuthDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,14 +24,12 @@ public class AuthService {
     public AuthDTO.TokenResponse authenticate(AuthDTO.LoginRequest request) {
         // 1. Busca o barbeiro pelo e-mail
         Barber barber = barberRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("Credenciais inválidas."));
+                .orElseThrow(() -> new InvalidCredentialsException("Credenciais inválidas."));
 
-        // 2. Compara a senha enviada (plano) com o Hash do banco
         if (!passwordEncoder.matches(request.password(), barber.getPassword())) {
-            throw new IllegalArgumentException("Credenciais inválidas.");
+            throw new InvalidCredentialsException("Credenciais inválidas.");
         }
 
-        // 3. Gera o token injetando o tenant_id do barbeiro
         String jwt = tokenService.generateToken(barber.getEmail(), barber.getTenantId());
 
         return new AuthDTO.TokenResponse(jwt, "Bearer");

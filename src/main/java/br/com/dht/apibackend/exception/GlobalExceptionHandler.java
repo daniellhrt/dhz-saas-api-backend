@@ -6,6 +6,7 @@
 package br.com.dht.apibackend.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +17,30 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<StandardError> handleInvalidCredentialsException(InvalidCredentialsException ex, HttpServletRequest request) {
+        log.warn("Tentativa de login com credenciais inválidas: {}", ex.getMessage());
+        
+        StandardError error = StandardError.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error("Unauthorized")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
 
     // Tratamento para violações de regra de negócio (ex: E-mail duplicado)
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
     public ResponseEntity<StandardError> handleBusinessRuleException(RuntimeException ex, HttpServletRequest request) {
+        log.warn("Violação de regra de negócio: {}", ex.getMessage());
+        
         StandardError error = StandardError.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
@@ -41,6 +60,8 @@ public class GlobalExceptionHandler {
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining(", "));
 
+        log.warn("Erro de validação: {}", errors);
+
         StandardError error = StandardError.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
@@ -55,8 +76,7 @@ public class GlobalExceptionHandler {
     // Tratamento de fallback de segurança para erros não mapeados (Impede vazamento de stacktrace)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<StandardError> handleGenericException(Exception ex, HttpServletRequest request) {
-
-        // Em um cenário real, aqui entraria um log.error("Erro interno", ex);
+        log.error("Erro interno não tratado", ex);
 
         StandardError error = StandardError.builder()
                 .timestamp(LocalDateTime.now())

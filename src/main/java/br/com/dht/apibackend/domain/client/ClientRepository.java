@@ -7,10 +7,11 @@ package br.com.dht.apibackend.domain.client;
  */
 
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,8 +26,8 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
     // Busca cliente por email dentro de um tenant (usado para validar duplicidade na criação)
     Optional<Client> findByEmailAndTenantId(String email, String tenantId);
 
-    // Lista todos os clientes de uma barbearia específica
-    List<Client> findAllByTenantId(String tenantId);
+    // Lista todos os clientes de uma barbearia específica com paginação
+    Page<Client> findAllByTenantId(String tenantId, Pageable pageable);
 
     // Verifica se o cliente existe antes de deletar
     boolean existsByIdAndTenantId(UUID id, String tenantId);

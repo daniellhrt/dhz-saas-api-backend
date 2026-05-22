@@ -6,11 +6,13 @@ package br.com.dht.apibackend.domain.catalog;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+
 import java.util.UUID;
 
 @RestController
@@ -26,8 +28,8 @@ public class CatalogController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ServiceItemDTO.Response>> listActive() {
-        return ResponseEntity.ok(catalogService.listActiveServices());
+    public ResponseEntity<Page<ServiceItemDTO.Response>> listActive(Pageable pageable) {
+        return ResponseEntity.ok(catalogService.listActiveServices(pageable));
     }
 
     @DeleteMapping("/{id}")

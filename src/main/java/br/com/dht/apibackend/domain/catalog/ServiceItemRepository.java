@@ -7,8 +7,9 @@ package br.com.dht.apibackend.domain.catalog;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,7 +20,7 @@ public interface ServiceItemRepository extends JpaRepository<ServiceItem, UUID> 
     boolean existsByTenantIdAndNameIgnoreCase(String tenantId, String name);
 
     // Lista apenas os serviços que a barbearia está prestando no momento
-    List<ServiceItem> findAllByTenantIdAndActiveTrue(String tenantId);
+    Page<ServiceItem> findAllByTenantIdAndActiveTrue(String tenantId, Pageable pageable);
 
     // Busca um serviço específico da barbearia
     Optional<ServiceItem> findByIdAndTenantId(UUID id, String tenantId);
