@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 Infra & Testing** — Phases 1–2 (shipped 2026-05-22)
-- 🚧 **v1.1 Evolução da API** — Phases 3–6 (in progress)
+- ✅ **v1.1 Evolução da API** — Phases 3–6 (shipped 2026-05-22)
 
 ## Phases
 
@@ -15,12 +15,12 @@
 
 </details>
 
-### 🚧 v1.1 Evolução da API (In Progress)
+### ✅ v1.1 Evolução da API (Complete)
 
 - [x] **Phase 3: Registro de Barbeiros** — Criar CRUD completo de barbeiros com endpoint de cadastro
 - [x] **Phase 4: Gestão de Status de Agendamentos** — Endpoints para confirmar, cancelar e concluir agendamentos
 - [x] **Phase 5: Rate Limiting Distribuído** — Substituir cache local por Redis + Bucket4j
-- [ ] **Phase 6: Testes para Client e Catalog** — Cobertura de testes nos domínios faltantes
+- [x] **Phase 6: Testes para Client e Catalog** — Cobertura de testes nos domínios faltantes
 
 ## Progress
 
@@ -31,7 +31,7 @@
 | 3. Registro de Barbeiros | v1.1 | REG-01..04 | Complete |
 | 4. Gestão de Status de Agendamentos | v1.1 | STATUS-01..03 | Complete |
 | 5. Rate Limiting Distribuído | v1.1 | RL-01..03 | Complete |
-| 6. Testes para Client e Catalog | v1.1 | TEST-06..09 | Not started |
+| 6. Testes para Client e Catalog | v1.1 | TEST-06..09 | Complete |
 
 ---
 

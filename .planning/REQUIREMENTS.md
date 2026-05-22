@@ -26,10 +26,10 @@
 
 ### Testes
 
-- [ ] **TEST-06**: Testes unitários para ClientService (Mockito)
-- [ ] **TEST-07**: Testes de integração para ClientController (MockMvc)
-- [ ] **TEST-08**: Testes unitários para CatalogService (Mockito)
-- [ ] **TEST-09**: Testes de integração para CatalogController (MockMvc)
+- [x] **TEST-06**: Testes unitários para ClientService (Mockito)
+- [x] **TEST-07**: Testes de integração para ClientController (MockMvc)
+- [x] **TEST-08**: Testes unitários para CatalogService (Mockito)
+- [x] **TEST-09**: Testes de integração para CatalogController (MockMvc)
 
 ## v2 Requirements (Deferred)
 
@@ -56,15 +56,15 @@
 | RL-01 | 5 | Done |
 | RL-02 | 5 | Done |
 | RL-03 | 5 | Done |
-| TEST-06 | - | Pending |
-| TEST-07 | - | Pending |
-| TEST-08 | - | Pending |
-| TEST-09 | - | Pending |
+| TEST-06 | 6 | Done |
+| TEST-07 | 6 | Done |
+| TEST-08 | 6 | Done |
+| TEST-09 | 6 | Done |
 
 **Coverage:**
 - v1.1 requirements: 14 total
 - Mapped to phases: 7
-- Unmapped: 7 ⚠️
+- Unmapped: 0 ✅
 
 ---
 *Requirements defined: 2026-05-22*
