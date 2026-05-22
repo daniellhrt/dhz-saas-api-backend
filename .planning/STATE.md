@@ -9,19 +9,20 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 
 ## Execution State
 
-**Status:** Defining requirements
-**Active Phase:** None (not started)
+**Status:** Milestone v1.1 complete
+**Active Phase:** None (milestone done)
 **Active Plan:** None
 **Blocked:** No
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 6/6 complete (v1.1 shipped)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-22 — Milestone v1.1 started
+Status: Milestone complete
+Last activity: 2026-05-22 — v1.1 fully verified (UAT + Security)
 
 ## Memory
 
 - v1.0 shipped with 13/13 requirements covered, UAT 100% pass
-- v1.1 foca em registro de barbeiros, status de agendamentos, rate limiting com Redis e testes
+- v1.1 shipped with phases 3-6 complete (barbeiros, status, rate limiting, testes)
+- Phase 3: 11/11 UAT passed, 9/9 threats closed

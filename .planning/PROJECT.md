@@ -16,15 +16,13 @@ Isolamento seguro de dados entre barbearias (multi-tenancy) e estabilidade da AP
 - API multi-tenant com JWT, rate limiting, Docker, CI via GitHub Actions
 - 13/13 requisitos cobertos e verificados via UAT
 
-## Current Milestone: v1.1 Evolução da API
-
-**Goal:** Expandir a API com novos endpoints de negócio, escalar infraestrutura e aumentar cobertura de testes.
-
-**Target features:**
-- Registro de barbeiros (CRUD) — atualmente só existe login
+**Shipped:** v1.1 Evolução da API (2026-05-22)
+- CRUD de barbeiros com dois níveis de acesso (ADMIN/USER)
 - Gestão de status de agendamentos (confirmar, cancelar, concluir)
-- Rate limiting distribuído com Redis
+- Rate limiting distribuído com Redis + Bucket4j
 - Testes para Client e Catalog
+- 6 novas classes, 4 migrations Flyway, 16+ testes
+- 11/11 UAT fase 3, security verified (9/9 threats closed)
 
 ## Requirements
 
@@ -38,13 +36,14 @@ Isolamento seguro de dados entre barbearias (multi-tenancy) e estabilidade da AP
 - ✓ Dockerfile multi-stage + compose.yaml — v1.0
 - ✓ Testes unitários (Service), integração (Controller), repositório (H2) — v1.0
 - ✓ GitHub Actions CI funcional — v1.0
+- ✓ Registro de barbeiros com roles ADMIN/USER (CRUD) — v1.1
+- ✓ Gestão de status de agendamentos (confirmar, cancelar, concluir) — v1.1
+- ✓ Rate limiting distribuído via Redis com Bucket4j — v1.1
+- ✓ Testes unitários e de integração para Client e Catalog — v1.1
 
-### Active (v1.1)
+### Active
 
-- [ ] Barbeiro pode se registrar com email e senha (CRUD)
-- [ ] Barbeiro pode confirmar, cancelar e concluir agendamentos
-- [ ] Rate limiting distribuído via Redis para escalar horizontalmente
-- [ ] Testes unitários e de integração para domínios Client e Catalog
+[none — v1.1 fully shipped]
 
 ### Out of Scope
 
