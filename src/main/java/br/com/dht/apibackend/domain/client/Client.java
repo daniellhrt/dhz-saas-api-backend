@@ -21,6 +21,7 @@ public class Client {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Setter
     private UUID id;
 
     // CRÍTICO: updatable = false garante que um cliente NUNCA mude de barbearia após criado
@@ -42,6 +43,18 @@ public class Client {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Setter
+    @Column(name = "cpf", length = 20)
+    private String cpf;
+
+    @Setter
+    @Column(name = "birth_date")
+    private java.time.LocalDate birthDate;
+
+    @Setter
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
 
     // Construtor sem o ID e sem Data, usados apenas para criação de novos registros
     public Client(String tenantId, String name, String email, String phone) {

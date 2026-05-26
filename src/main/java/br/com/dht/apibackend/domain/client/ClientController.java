@@ -31,4 +31,9 @@ public class ClientController {
     public ResponseEntity<Page<ClientDTO.Response>> listAll(Pageable pageable) {
         return ResponseEntity.ok(clientService.listAllClients(pageable));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ClientDTO.Response> update(@PathVariable java.util.UUID id, @RequestBody @Valid ClientDTO.Request request) {
+        return ResponseEntity.ok(clientService.updateClient(id, request));
+    }
 }

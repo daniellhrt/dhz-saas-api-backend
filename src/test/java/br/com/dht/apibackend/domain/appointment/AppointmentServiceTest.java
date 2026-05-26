@@ -23,6 +23,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @ExtendWith(MockitoExtension.class)
 class AppointmentServiceTest {
 
@@ -231,7 +234,7 @@ class AppointmentServiceTest {
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
                 appointmentService.completeAppointment(id));
-        assertEquals("Apenas agendamentos confirmados podem ser concluídos.", exception.getMessage());
+        assertEquals("Apenas agendamentos confirmados ou em andamento podem ser concluídos.", exception.getMessage());
     }
 
     @Test
@@ -242,5 +245,158 @@ class AppointmentServiceTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 appointmentService.confirmAppointment(id));
         assertEquals("Agendamento não encontrado.", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenServiceItemNotFound() {
+        UUID clientId = UUID.randomUUID();
+        UUID serviceId = UUID.randomUUID();
+        AppointmentDTO.Request request = new AppointmentDTO.Request(clientId, serviceId, LocalDateTime.now().plusDays(1));
+
+        when(clientRepository.findByIdAndTenantId(clientId, TENANT_ID)).thenReturn(Optional.of(mockClient));
+        when(serviceItemRepository.findByIdAndTenantId(serviceId, TENANT_ID)).thenReturn(Optional.empty());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                appointmentService.scheduleAppointment(request));
+        assertEquals("Serviço não encontrado.", exception.getMessage());
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldCalculateEndTimeBasedOnServiceDuration() {
+        UUID clientId = UUID.randomUUID();
+        UUID serviceId = UUID.randomUUID();
+        LocalDateTime startTime = LocalDateTime.now().plusDays(1);
+
+        AppointmentDTO.Request request = new AppointmentDTO.Request(clientId, serviceId, startTime);
+
+        when(clientRepository.findByIdAndTenantId(clientId, TENANT_ID)).thenReturn(Optional.of(mockClient));
+        when(serviceItemRepository.findByIdAndTenantId(serviceId, TENANT_ID)).thenReturn(Optional.of(mockService));
+        when(appointmentRepository.hasOverlappingAppointment(eq(TENANT_ID), eq(startTime), any(LocalDateTime.class))).thenReturn(false);
+        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AppointmentDTO.Response response = appointmentService.scheduleAppointment(request);
+
+        LocalDateTime expectedEnd = startTime.plusMinutes(mockService.getDurationMinutes());
+        assertEquals(expectedEnd, response.endTime());
+    }
+
+    @Test
+    void shouldIgnoreCanceledAppointmentsInOverlapCheck() {
+        UUID clientId = UUID.randomUUID();
+        UUID serviceId = UUID.randomUUID();
+        LocalDateTime startTime = LocalDateTime.now().plusDays(1);
+
+        AppointmentDTO.Request request = new AppointmentDTO.Request(clientId, serviceId, startTime);
+
+        when(clientRepository.findByIdAndTenantId(clientId, TENANT_ID)).thenReturn(Optional.of(mockClient));
+        when(serviceItemRepository.findByIdAndTenantId(serviceId, TENANT_ID)).thenReturn(Optional.of(mockService));
+        when(appointmentRepository.hasOverlappingAppointment(eq(TENANT_ID), eq(startTime), any(LocalDateTime.class))).thenReturn(false);
+        when(appointmentRepository.save(any(Appointment.class))).thenReturn(pendingAppointment);
+
+        assertDoesNotThrow(() -> appointmentService.scheduleAppointment(request));
+        verify(appointmentRepository).hasOverlappingAppointment(eq(TENANT_ID), eq(startTime), any(LocalDateTime.class));
+    }
+
+    @Test
+    void shouldIsolateAppointmentsByTenant() {
+        String otherTenant = "other-tenant-456";
+        UUID id = UUID.randomUUID();
+
+        when(appointmentRepository.findByIdAndTenantId(id, otherTenant)).thenReturn(Optional.empty());
+
+        TenantContext.setTenantId(otherTenant);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                appointmentService.confirmAppointment(id));
+        assertEquals("Agendamento não encontrado.", exception.getMessage());
+        verify(appointmentRepository).findByIdAndTenantId(id, otherTenant);
+    }
+
+    @Test
+    void shouldHandleBlockScheduleRequests() {
+        LocalDateTime startTime = LocalDateTime.now().plusDays(1);
+        LocalDateTime endTime = startTime.plusHours(2);
+        AppointmentDTO.BlockRequest request = new AppointmentDTO.BlockRequest(startTime, endTime, "Manutenção");
+
+        when(appointmentRepository.hasOverlappingAppointment(TENANT_ID, startTime, endTime)).thenReturn(false);
+        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AppointmentDTO.Response response = appointmentService.blockSchedule(request);
+
+        assertEquals("Bloqueio", response.clientName());
+        assertEquals("Horário Bloqueado", response.serviceName());
+        assertEquals(startTime, response.startTime());
+        assertEquals(endTime, response.endTime());
+    }
+
+    @Test
+    void shouldListAppointmentsWithPagination() {
+        Pageable pageable = Pageable.ofSize(10);
+        Page<Appointment> mockPage = mock(Page.class);
+        when(mockPage.map(any())).thenReturn(Page.empty());
+        when(appointmentRepository.findAllByTenantId(TENANT_ID, pageable)).thenReturn(mockPage);
+
+        appointmentService.listAllAppointments(pageable);
+
+        verify(appointmentRepository).findAllByTenantId(TENANT_ID, pageable);
+    }
+
+    @Test
+    void shouldStartPendingAppointmentSuccessfully() {
+        UUID id = UUID.randomUUID();
+        when(appointmentRepository.findByIdAndTenantId(id, TENANT_ID)).thenReturn(Optional.of(pendingAppointment));
+
+        AppointmentDTO.Response response = appointmentService.startAppointment(id);
+
+        assertEquals(AppointmentStatus.IN_PROGRESS.name(), response.status());
+        verify(appointmentRepository).findByIdAndTenantId(id, TENANT_ID);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenStartNonPendingOrCompleted() {
+        UUID id = UUID.randomUUID();
+        when(appointmentRepository.findByIdAndTenantId(id, TENANT_ID)).thenReturn(Optional.of(completedAppointment));
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                appointmentService.startAppointment(id));
+        assertEquals("Apenas agendamentos pendentes ou confirmados podem ser iniciados.", exception.getMessage());
+    }
+
+    @Test
+    void shouldCompleteInProgressAppointment() {
+        Appointment inProgressAppointment = new Appointment(TENANT_ID, mockClient, mockService,
+                LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(1).plusMinutes(30));
+        inProgressAppointment.setStatus(AppointmentStatus.IN_PROGRESS);
+        UUID id = UUID.randomUUID();
+
+        when(appointmentRepository.findByIdAndTenantId(id, TENANT_ID)).thenReturn(Optional.of(inProgressAppointment));
+
+        AppointmentDTO.Response response = appointmentService.completeAppointment(id);
+
+        assertEquals(AppointmentStatus.COMPLETED.name(), response.status());
+    }
+
+    @Test
+    void shouldRevertCompletedAppointment() {
+        Appointment completedApp = new Appointment(TENANT_ID, mockClient, mockService,
+                LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(1).plusMinutes(30));
+        completedApp.setStatus(AppointmentStatus.COMPLETED);
+        UUID id = UUID.randomUUID();
+
+        when(appointmentRepository.findByIdAndTenantId(id, TENANT_ID)).thenReturn(Optional.of(completedApp));
+
+        AppointmentDTO.Response response = appointmentService.revertAppointment(id);
+
+        assertEquals(AppointmentStatus.IN_PROGRESS.name(), response.status());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenRevertNonCompleted() {
+        UUID id = UUID.randomUUID();
+        when(appointmentRepository.findByIdAndTenantId(id, TENANT_ID)).thenReturn(Optional.of(pendingAppointment));
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                appointmentService.revertAppointment(id));
+        assertEquals("Apenas agendamentos concluídos podem ser revertidos.", exception.getMessage());
     }
 }

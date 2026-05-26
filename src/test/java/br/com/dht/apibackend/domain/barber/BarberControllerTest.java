@@ -65,6 +65,21 @@ class BarberControllerTest {
     }
 
     @Test
+    void shouldReturn403_WhenCreateBarber_Forbidden() throws Exception {
+        BarberDTO.CreateRequest request = new BarberDTO.CreateRequest("New User", "user@barber.com", "password123");
+
+        doThrow(new SecurityException("Acesso negado: apenas ADMIN pode realizar esta operação."))
+                .when(barberService).createBarber(any());
+
+        mockMvc.perform(post("/api/v1/barbers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.message").value("Acesso negado: apenas ADMIN pode realizar esta operação."));
+    }
+
+    @Test
     void shouldReturn200_WhenListAll() throws Exception {
         BarberDTO.Response barber = new BarberDTO.Response(UUID.randomUUID(), "Admin", "admin@barber.com", BarberRole.ADMIN);
         Page<BarberDTO.Response> page = new PageImpl<>(List.of(barber));

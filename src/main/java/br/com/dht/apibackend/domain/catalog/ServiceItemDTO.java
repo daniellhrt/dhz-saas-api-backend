@@ -17,8 +17,8 @@ public class ServiceItemDTO {
     public record Request(
             @NotBlank(message = "O nome do serviço é obrigatório") String name,
             String description,
-            @NotNull(message = "O preço é obrigatório") @DecimalMin(value = "0.0", inclusive = false, message = "O preço deve ser maior que zero") BigDecimal price,
-            @NotNull(message = "A duração é obrigatória") @Min(value = 5, message = "A duração mínima é de 15 minutos") Integer durationMinutes
+            @NotNull(message = "O preço é obrigatório") @DecimalMin(value = "0.01", inclusive = true, message = "O preço deve ser maior que zero") BigDecimal price,
+            @NotNull(message = "A duração é obrigatória") @Min(value = 15, message = "A duração mínima é de 15 minutos") Integer durationMinutes
     ) {}
 
     public record Response(

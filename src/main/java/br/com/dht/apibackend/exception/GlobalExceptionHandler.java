@@ -52,6 +52,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    // Tratamento para acessos negados lançados pela camada de serviço
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<StandardError> handleSecurityException(SecurityException ex, HttpServletRequest request) {
+        log.warn("Acesso negado: {}", ex.getMessage());
+
+        StandardError error = StandardError.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.FORBIDDEN.value())
+                .error("Forbidden")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
     // Tratamento para falhas de validação de DTO (ex: @NotBlank, @Email)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<StandardError> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {

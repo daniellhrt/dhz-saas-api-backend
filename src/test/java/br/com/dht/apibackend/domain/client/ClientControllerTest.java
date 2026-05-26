@@ -40,8 +40,8 @@ class ClientControllerTest {
 
     @Test
     void shouldReturn201_WhenCreateClient() throws Exception {
-        ClientDTO.Request request = new ClientDTO.Request("John Doe", "john@test.com", "11999999999");
-        ClientDTO.Response response = new ClientDTO.Response(UUID.randomUUID(), "John Doe", "john@test.com", "11999999999");
+        ClientDTO.Request request = new ClientDTO.Request("John Doe", "john@test.com", "(11) 99999-9999", null, null, null);
+        ClientDTO.Response response = new ClientDTO.Response(UUID.randomUUID(), "John Doe", "john@test.com", "(11) 99999-9999", null, null, null);
 
         when(clientService.createClient(any())).thenReturn(response);
 
@@ -55,7 +55,7 @@ class ClientControllerTest {
 
     @Test
     void shouldReturn400_WhenCreateClient_InvalidBody() throws Exception {
-        ClientDTO.Request request = new ClientDTO.Request("", "", "");
+        ClientDTO.Request request = new ClientDTO.Request("", "", "", null, null, null);
 
         mockMvc.perform(post("/api/v1/clients")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -65,7 +65,7 @@ class ClientControllerTest {
 
     @Test
     void shouldReturn200_WhenListAll() throws Exception {
-        ClientDTO.Response client = new ClientDTO.Response(UUID.randomUUID(), "John Doe", "john@test.com", "11999999999");
+        ClientDTO.Response client = new ClientDTO.Response(UUID.randomUUID(), "John Doe", "john@test.com", "11999999999", null, null, null);
         Page<ClientDTO.Response> page = new PageImpl<>(List.of(client));
 
         when(clientService.listAllClients(any())).thenReturn(page);

@@ -7,6 +7,8 @@ package br.com.dht.apibackend.domain.appointment;
 public enum AppointmentStatus {
     PENDING,
     CONFIRMED,
+    IN_PROGRESS,
     COMPLETED,
-    CANCELED
+    CANCELED,
+    BLOCKED
 }

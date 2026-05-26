@@ -22,6 +22,7 @@ public class ServiceItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Setter
     private UUID id;
 
     @Column(name = "tenant_id", nullable = false, updatable = false)

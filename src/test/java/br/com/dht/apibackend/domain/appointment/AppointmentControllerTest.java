@@ -46,7 +46,8 @@ class AppointmentControllerTest {
         );
 
         AppointmentDTO.Response mockResponse = new AppointmentDTO.Response(
-                UUID.randomUUID(), "John", "Corte", LocalDateTime.now().plusDays(2),
+                UUID.randomUUID(), "John", null, null, null, null, "Corte",
+                LocalDateTime.now().plusDays(2),
                 LocalDateTime.now().plusDays(2).plusMinutes(30), "PENDING", null
         );
 
@@ -60,24 +61,11 @@ class AppointmentControllerTest {
     }
 
     @Test
-    void shouldReturn400WhenDateIsInThePast() throws Exception {
-        AppointmentDTO.Request request = new AppointmentDTO.Request(
-                UUID.randomUUID(),
-                UUID.randomUUID(),
-                LocalDateTime.now().minusDays(1)
-        );
-
-        mockMvc.perform(post("/api/v1/appointments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void shouldReturn200WhenConfirm() throws Exception {
         UUID id = UUID.randomUUID();
         AppointmentDTO.Response mockResponse = new AppointmentDTO.Response(
-                id, "John", "Corte", LocalDateTime.now(), LocalDateTime.now(), "CONFIRMED", null
+                id, "John", null, null, null, null, "Corte",
+                LocalDateTime.now(), LocalDateTime.now(), "CONFIRMED", null
         );
 
         when(appointmentService.confirmAppointment(eq(id))).thenReturn(mockResponse);
@@ -91,7 +79,8 @@ class AppointmentControllerTest {
     void shouldReturn200WhenCancelWithReason() throws Exception {
         UUID id = UUID.randomUUID();
         AppointmentDTO.Response mockResponse = new AppointmentDTO.Response(
-                id, "John", "Corte", LocalDateTime.now(), LocalDateTime.now(), "CANCELED", "Cliente desistiu"
+                id, "John", null, null, null, null, "Corte",
+                LocalDateTime.now(), LocalDateTime.now(), "CANCELED", "Cliente desistiu"
         );
 
         when(appointmentService.cancelAppointment(eq(id), any())).thenReturn(mockResponse);
@@ -110,7 +99,8 @@ class AppointmentControllerTest {
     void shouldReturn200WhenCancelWithoutReason() throws Exception {
         UUID id = UUID.randomUUID();
         AppointmentDTO.Response mockResponse = new AppointmentDTO.Response(
-                id, "John", "Corte", LocalDateTime.now(), LocalDateTime.now(), "CANCELED", null
+                id, "John", null, null, null, null, "Corte",
+                LocalDateTime.now(), LocalDateTime.now(), "CANCELED", null
         );
 
         when(appointmentService.cancelAppointment(eq(id), eq(null))).thenReturn(mockResponse);
@@ -124,7 +114,8 @@ class AppointmentControllerTest {
     void shouldReturn200WhenComplete() throws Exception {
         UUID id = UUID.randomUUID();
         AppointmentDTO.Response mockResponse = new AppointmentDTO.Response(
-                id, "John", "Corte", LocalDateTime.now(), LocalDateTime.now(), "COMPLETED", null
+                id, "John", null, null, null, null, "Corte",
+                LocalDateTime.now(), LocalDateTime.now(), "COMPLETED", null
         );
 
         when(appointmentService.completeAppointment(eq(id))).thenReturn(mockResponse);

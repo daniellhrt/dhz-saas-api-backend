@@ -37,4 +37,9 @@ public class CatalogController {
         catalogService.deactivateService(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ServiceItemDTO.Response> update(@PathVariable UUID id, @RequestBody @Valid ServiceItemDTO.Request request) {
+        return ResponseEntity.ok(catalogService.updateService(id, request));
+    }
 }

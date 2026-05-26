@@ -9,8 +9,8 @@ import jakarta.validation.constraints.NotBlank;
 
 public class AuthDTO {
     public record LoginRequest(
-            @NotBlank @Email String email,
-            @NotBlank String password
+            @NotBlank(message = "O e-mail é obrigatório") @Email(message = "Formato de e-mail inválido") String email,
+            @NotBlank(message = "A senha é obrigatória") String password
     ) {}
 
     public record TokenResponse(

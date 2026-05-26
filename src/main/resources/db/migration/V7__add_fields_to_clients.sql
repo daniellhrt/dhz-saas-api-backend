@@ -1,0 +1,3 @@
+ALTER TABLE clients ADD COLUMN cpf VARCHAR(20);
+ALTER TABLE clients ADD COLUMN birth_date DATE;
+ALTER TABLE clients ADD COLUMN notes TEXT;

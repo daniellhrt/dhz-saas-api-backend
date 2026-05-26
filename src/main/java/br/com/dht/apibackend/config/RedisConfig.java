@@ -25,10 +25,15 @@ public class RedisConfig {
     @ConditionalOnProperty(name = "spring.data.redis.host")
     public ProxyManager<byte[]> lettuceProxyManager(
             @Value("${spring.data.redis.host:localhost}") String host,
-            @Value("${spring.data.redis.port:6379}") int port) {
+            @Value("${spring.data.redis.port:6379}") int port,
+            @Value("${spring.data.redis.password:#{null}}") String password) {
 
         try {
-            RedisURI redisUri = RedisURI.builder().withHost(host).withPort(port).build();
+            RedisURI.Builder builder = RedisURI.builder().withHost(host).withPort(port);
+            if (password != null && !password.isEmpty()) {
+                builder.withPassword(password.toCharArray());
+            }
+            RedisURI redisUri = builder.build();
             RedisClient redisClient = RedisClient.create(redisUri);
             return LettuceBasedProxyManager.builderFor(redisClient).build();
         } catch (Exception e) {

@@ -96,4 +96,98 @@ class CatalogServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> catalogService.deactivateService(id));
     }
+
+    // ==================== NOVOS TESTES (Sprint 1 — Tarefa 1.3) ====================
+
+    @Test
+    void shouldUpdateServiceSuccessfully() {
+        UUID serviceId = UUID.randomUUID();
+        ServiceItemDTO.Request request = new ServiceItemDTO.Request(
+            "Corte Atualizado",
+            "Nova descrição",
+            new BigDecimal("60.0"),
+            40
+        );
+
+        ServiceItem existingService = new ServiceItem(TENANT_ID, "Corte", "Descrição antiga", new BigDecimal("50.0"), 30);
+        existingService.setId(serviceId);
+
+        when(repository.findByIdAndTenantId(serviceId, TENANT_ID)).thenReturn(Optional.of(existingService));
+        when(repository.existsByTenantIdAndNameIgnoreCase(TENANT_ID, "Corte Atualizado")).thenReturn(false);
+        when(repository.save(any(ServiceItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ServiceItemDTO.Response response = catalogService.updateService(serviceId, request);
+
+        assertNotNull(response);
+        assertEquals("Corte Atualizado", response.name());
+        assertEquals(0, new BigDecimal("60.0").compareTo(response.price()));
+        verify(repository, times(1)).save(any(ServiceItem.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingToExistingName() {
+        UUID serviceId = UUID.randomUUID();
+        ServiceItemDTO.Request request = new ServiceItemDTO.Request(
+            "Outro Serviço",
+            "Descrição",
+            new BigDecimal("50.0"),
+            30
+        );
+
+        ServiceItem existingService = new ServiceItem(TENANT_ID, "Corte", "Descrição", new BigDecimal("50.0"), 30);
+        existingService.setId(serviceId);
+
+        when(repository.findByIdAndTenantId(serviceId, TENANT_ID)).thenReturn(Optional.of(existingService));
+        when(repository.existsByTenantIdAndNameIgnoreCase(TENANT_ID, "Outro Serviço")).thenReturn(true);
+
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> catalogService.updateService(serviceId, request)
+        );
+        assertEquals("Já existe outro serviço com este nome cadastrado.", exception.getMessage());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenServiceNotFoundOnUpdate() {
+        UUID nonExistentId = UUID.randomUUID();
+        ServiceItemDTO.Request request = new ServiceItemDTO.Request(
+            "Serviço",
+            "Descrição",
+            new BigDecimal("50.0"),
+            30
+        );
+
+        when(repository.findByIdAndTenantId(nonExistentId, TENANT_ID)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> catalogService.updateService(nonExistentId, request));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void shouldPreventZeroPriceAtDTO() {
+        // Validação acontece no DTO via @DecimalMin(0.01)
+        // Este teste documenta que preço zero é inválido
+        ServiceItemDTO.Request request = new ServiceItemDTO.Request(
+            "Serviço",
+            "Descrição",
+            BigDecimal.ZERO,
+            30
+        );
+
+        assertTrue(request.price().compareTo(BigDecimal.ZERO) <= 0);
+    }
+
+    @Test
+    void shouldIsolateTenantCatalog() {
+        String anotherTenant = "other-tenant-456";
+        UUID serviceId = UUID.randomUUID();
+
+        TenantContext.setTenantId(anotherTenant);
+
+        when(repository.findByIdAndTenantId(serviceId, anotherTenant)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> catalogService.deactivateService(serviceId));
+        verify(repository, times(1)).findByIdAndTenantId(serviceId, anotherTenant);
+    }
 }

@@ -1,9 +1,9 @@
-nao# Arquivo: src/main/resources/application-prod.yml
+# Arquivo: src/main/resources/application-prod.yml
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
+    url: jdbc:postgresql://${PGHOST:${DB_HOST:postgres}}:${PGPORT:${DB_PORT:5432}}/${PGDATABASE:${POSTGRES_DB}}
+    username: ${PGUSER:${POSTGRES_USER}}
+    password: ${PGPASSWORD:${POSTGRES_PASSWORD}}
   jpa:
     hibernate:
       ddl-auto: validate

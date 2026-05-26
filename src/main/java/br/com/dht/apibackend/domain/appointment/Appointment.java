@@ -29,11 +29,11 @@ public class Appointment {
     private String tenantId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client_id", nullable = false)
+    @JoinColumn(name = "client_id")
     private Client client;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_item_id", nullable = false)
+    @JoinColumn(name = "service_item_id")
     private ServiceItem serviceItem;
 
     @Column(name = "start_time", nullable = false)
@@ -62,5 +62,14 @@ public class Appointment {
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = AppointmentStatus.PENDING;
+    }
+
+    // Construtor para bloqueio
+    public Appointment(String tenantId, LocalDateTime startTime, LocalDateTime endTime, String notes) {
+        this.tenantId = tenantId;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.status = AppointmentStatus.BLOCKED;
+        this.cancelReason = notes; // Podemos usar cancelReason como notes para bloqueio
     }
 }

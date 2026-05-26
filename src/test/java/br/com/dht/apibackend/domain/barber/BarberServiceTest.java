@@ -244,4 +244,74 @@ class BarberServiceTest {
             verify(barberRepository, never()).delete(any());
         }
     }
+
+    @Test
+    void shouldThrowException_WhenBarberNotFound() {
+        UUID nonExistentId = UUID.randomUUID();
+
+        when(barberRepository.findByIdAndTenantId(nonExistentId, TENANT_ID)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> barberService.updateBarber(nonExistentId, new BarberDTO.UpdateRequest("Name", null)));
+        verify(barberRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowException_WhenUpdatingToExistingEmail() {
+        UUID barberId = UUID.randomUUID();
+
+        try (MockedStatic<SecurityContextHolder> securityHolder = mockStatic(SecurityContextHolder.class)) {
+            Authentication auth = mock(Authentication.class);
+            SecurityContext securityContext = mock(SecurityContext.class);
+
+            when(securityContext.getAuthentication()).thenReturn(auth);
+            when(auth.getName()).thenReturn(ADMIN_EMAIL);
+            securityHolder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+
+            Barber self = new Barber(TENANT_ID, "Admin", ADMIN_EMAIL, "hash", BarberRole.ADMIN);
+            Barber other = new Barber(TENANT_ID, "Other", "other@barber.com", "hash", BarberRole.USER);
+
+            when(barberRepository.findByIdAndTenantId(barberId, TENANT_ID)).thenReturn(Optional.of(self));
+            when(barberRepository.findByEmail("other@barber.com")).thenReturn(Optional.of(other));
+
+            BarberDTO.UpdateRequest request = new BarberDTO.UpdateRequest("Admin", "other@barber.com");
+
+            assertThrows(IllegalArgumentException.class, () -> barberService.updateBarber(barberId, request));
+        }
+    }
+
+    @Test
+    void shouldThrowException_WhenCreateBarber_EmailDuplicate() {
+        try (MockedStatic<SecurityContextHolder> securityHolder = mockStatic(SecurityContextHolder.class)) {
+            Authentication auth = mock(Authentication.class);
+            SecurityContext securityContext = mock(SecurityContext.class);
+
+            when(securityContext.getAuthentication()).thenReturn(auth);
+            when(auth.getName()).thenReturn(ADMIN_EMAIL);
+            securityHolder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+
+            Barber admin = new Barber(TENANT_ID, "Admin", ADMIN_EMAIL, "hash", BarberRole.ADMIN);
+            Barber existing = new Barber(TENANT_ID, "Existing", "existing@barber.com", "hash", BarberRole.USER);
+
+            when(barberRepository.findByEmail(ADMIN_EMAIL)).thenReturn(Optional.of(admin));
+            when(barberRepository.findByEmail("existing@barber.com")).thenReturn(Optional.of(existing));
+
+            BarberDTO.CreateRequest request = new BarberDTO.CreateRequest("New", "existing@barber.com", "pass");
+
+            assertThrows(IllegalArgumentException.class, () -> barberService.createBarber(request));
+            verify(barberRepository, never()).save(any());
+        }
+    }
+
+    @Test
+    void shouldIsolateBarbersByTenant() {
+        String anotherTenant = "other-tenant-456";
+        UUID barberId = UUID.randomUUID();
+
+        TenantContext.setTenantId(anotherTenant);
+
+        when(barberRepository.findByIdAndTenantId(barberId, anotherTenant)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> barberService.updateBarber(barberId, new BarberDTO.UpdateRequest("Name", null)));
+        verify(barberRepository, never()).save(any());
+    }
 }
