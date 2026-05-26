@@ -2,12 +2,10 @@
 
 **Q: Provedor Cloud — Onde hospedar a API, Banco e Redis?**
 - Options: Railway, Render, Outro
-- Selected: Railway
+- Pivot: O usuário solicitou sair do Railway e optou pelo **Render**.
 
 **Q: Banco de Dados & Redis — Usar recursos do próprio provedor ou externos?**
-- Options: Railway nativo, Supabase/Upstash
-- Selected: Railway nativo (manter o banco junto com o Railway)
+- Selected: Usar as features gerenciadas do Render.
 
 **Q: Segurança (CORS) — Liberar acesso total ou restringir ao domínio do frontend no Vercel?**
-- Options: Domínio fixo, `*.vercel.app`
 - Selected: Usar a URL fornecida pela Vercel onde o front já está rodando.

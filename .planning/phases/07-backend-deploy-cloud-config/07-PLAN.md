@@ -1,32 +1,26 @@
-# Phase 7: Backend Deploy & Cloud Config
+# Phase 7: Backend Deploy & Cloud Config (GCP Pivot)
 
 ## 1. Goal
-Hospedar a API de forma acessível na internet junto ao banco de dados (Postgres) e Redis, configurando os arquivos de ambiente para suportar as variáveis automáticas do Railway e habilitando o CORS para o frontend (Vercel).
+Modificar as configurações de infraestrutura para preparar o deploy no Google Cloud Platform (Cloud Run para a API, Cloud SQL para o Postgres e Memorystore para o Redis). O foco será deixar os arquivos de configuração 100% genéricos, pois o GCP permite que o desenvolvedor defina as chaves livremente no console.
 
 ## 2. Approach
-- **CORS:** Criar `CorsConfig.java` para permitir a comunicação com a aplicação web. O `allowedOrigins` será lido via variável de ambiente, com fallback seguro.
-- **Variáveis de Ambiente:** Mapear propriedades no `application-prod.yml` para consumir variáveis do Railway (`PORT`, `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`, `REDISPASSWORD`, etc.).
-- **Redis Auth:** Atualizar `RedisConfig.java` para verificar a presença de uma senha e adicioná-la ao `RedisURI` caso exista.
+- **PostgreSQL:** Simplificar o `application-prod.yml` removendo as variáveis prefixadas (`PGHOST`, `PGUSER`, etc) do Railway e retornando para as variáveis agnósticas (`DB_HOST`, `DB_PORT`, `POSTGRES_USER`, etc).
+- **Redis:** Manter o `RedisConfig.java` como está, pois a lógica de injetar a senha de forma opcional funcionará bem no Memorystore (que muitas vezes sequer usa senha na mesma VPC). Retornar as propriedades do `application-prod.yml` para apenas usar `REDIS_HOST` e `REDIS_PORT`.
+- O CORS já está dinâmico e pronto.
 
 ## 3. Tasks
 
-- [ ] **Task 1: Criar configuração de CORS**
-  - Criar classe `br.com.dht.apibackend.config.CorsConfig` implementando `WebMvcConfigurer`.
-  - Ler variável de ambiente `${CORS_ALLOWED_ORIGINS:*}` (permitindo `*` por padrão para desenvolvimento e flexibilidade inicial de testes, ou a URL exata do Vercel via Env Var na nuvem).
-  - Configurar `.addMapping("/**").allowedOrigins(origins).allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS").allowedHeaders("*")`.
+- [ ] **Task 1: Atualizar application-prod.yml**
+  - Mudar o mapping de datasource de volta para: `url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${POSTGRES_DB}`.
+  - Mudar username/password de volta para `${POSTGRES_USER}` e `${POSTGRES_PASSWORD}`.
+  - Isso garante que a aplicação não dependa de nenhuma estrutura proprietária.
+  - Para o Redis, remover as variáveis `REDISHOST`, e voltar a consumir `${REDIS_HOST}` puramente.
 
-- [ ] **Task 2: Atualizar RedisConfig para suportar Senha**
-  - Modificar `br.com.dht.apibackend.config.RedisConfig.java`.
-  - Adicionar `@Value("${spring.data.redis.password:#{null}}") String password`.
-  - Atualizar o `RedisURI.builder()` para incluir `.withPassword(password.toCharArray())` se `password` não for nulo nem vazio.
+- [ ] **Task 2: Atualizar application.yml**
+  - Fazer a mesma limpeza nas propriedades do Redis nos profiles `dev` e `prod`.
 
-- [ ] **Task 3: Atualizar application-prod.yml e application.yml**
-  - Em `application.yml` (ou `application-prod.yml`), definir: `server: port: ${PORT:8080}`.
-  - No `application-prod.yml`, corrigir o typo `nao# Arquivo:...` na linha 1.
-  - Mapear Postgres: `url: jdbc:postgresql://${PGHOST:${DB_HOST:postgres}}:${PGPORT:${DB_PORT:5432}}/${PGDATABASE:${POSTGRES_DB:postgres}}`, username/password para `PGUSER`/`PGPASSWORD` com fallback.
-  - Mapear Redis: `host: ${REDISHOST:${REDIS_HOST:localhost}}`, `port: ${REDISPORT:${REDIS_PORT:6379}}`, `password: ${REDISPASSWORD:}`.
+- [ ] **Task 3: Validar a suíte de testes**
+  - Executar os testes automatizados para garantir integridade.
 
 ## 4. Verification
-1. Subir o ambiente local com `docker compose up` para garantir que o fallback ainda funciona sem quebrar a pipeline de dev.
-2. Rodar a suíte de testes unitários e de integração `.\mvnw.cmd clean test` para garantir que `CorsConfig` e `RedisConfig` não quebram o contexto do Spring.
-3. Deploy manual no Railway da branch `main` e validação se as vars são injetadas com sucesso e o health endpoint (ou Swagger UI) responde 200 OK publicamente.
+1. `.\mvnw.cmd clean test` não deverá falhar e validará a regressão das variáveis.

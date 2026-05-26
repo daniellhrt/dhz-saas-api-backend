@@ -25,9 +25,9 @@ spring:
       lifecycle-management: start-and-stop
   data:
     redis:
-      host: ${REDISHOST:${REDIS_HOST:localhost}}
-      port: ${REDISPORT:${REDIS_PORT:6379}}
-      password: ${REDISPASSWORD:}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -43,6 +43,6 @@ spring:
       on-profile: prod
   data:
     redis:
-      host: ${REDISHOST:${REDIS_HOST:localhost}}
-      port: ${REDISPORT:${REDIS_PORT:6379}}
-      password: ${REDISPASSWORD:}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
