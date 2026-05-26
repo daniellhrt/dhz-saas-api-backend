@@ -129,6 +129,7 @@ public class AppointmentService {
         }
 
         appointment.setStatus(AppointmentStatus.COMPLETED);
+        appointment.setFinalizedAt(LocalDateTime.now());
         log.info("Agendamento concluído: {} no tenant {}", id, TenantContext.getTenantId());
         return AppointmentDTO.Response.fromEntity(appointment);
     }
@@ -142,6 +143,7 @@ public class AppointmentService {
         }
 
         appointment.setStatus(AppointmentStatus.IN_PROGRESS);
+        appointment.setFinalizedAt(null);
         log.info("Agendamento revertido para em andamento: {} no tenant {}", id, TenantContext.getTenantId());
         return AppointmentDTO.Response.fromEntity(appointment);
     }

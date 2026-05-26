@@ -37,7 +37,8 @@ public class AppointmentDTO {
             LocalDateTime startTime,
             LocalDateTime endTime,
             String status,
-            String cancelReason
+            String cancelReason,
+            LocalDateTime finalizedAt
     ) {
         public static Response fromEntity(Appointment app) {
             String clientName = app.getClient() != null ? app.getClient().getName() : "Bloqueio";
@@ -57,7 +58,8 @@ public class AppointmentDTO {
                     app.getStartTime(),
                     app.getEndTime(),
                     app.getStatus().name(),
-                    app.getCancelReason()
+                    app.getCancelReason(),
+                    app.getFinalizedAt()
             );
         }
     }

@@ -51,6 +51,10 @@ public class Appointment {
     @Column(name = "cancel_reason")
     private String cancelReason;
 
+    @Setter
+    @Column(name = "finalized_at")
+    private LocalDateTime finalizedAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

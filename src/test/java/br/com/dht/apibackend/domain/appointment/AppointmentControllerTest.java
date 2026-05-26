@@ -48,7 +48,7 @@ class AppointmentControllerTest {
         AppointmentDTO.Response mockResponse = new AppointmentDTO.Response(
                 UUID.randomUUID(), "John", null, null, null, null, "Corte",
                 LocalDateTime.now().plusDays(2),
-                LocalDateTime.now().plusDays(2).plusMinutes(30), "PENDING", null
+                LocalDateTime.now().plusDays(2).plusMinutes(30), "PENDING", null, null
         );
 
         when(appointmentService.scheduleAppointment(any())).thenReturn(mockResponse);
@@ -65,7 +65,7 @@ class AppointmentControllerTest {
         UUID id = UUID.randomUUID();
         AppointmentDTO.Response mockResponse = new AppointmentDTO.Response(
                 id, "John", null, null, null, null, "Corte",
-                LocalDateTime.now(), LocalDateTime.now(), "CONFIRMED", null
+                LocalDateTime.now(), LocalDateTime.now(), "CONFIRMED", null, null
         );
 
         when(appointmentService.confirmAppointment(eq(id))).thenReturn(mockResponse);
@@ -80,7 +80,7 @@ class AppointmentControllerTest {
         UUID id = UUID.randomUUID();
         AppointmentDTO.Response mockResponse = new AppointmentDTO.Response(
                 id, "John", null, null, null, null, "Corte",
-                LocalDateTime.now(), LocalDateTime.now(), "CANCELED", "Cliente desistiu"
+                LocalDateTime.now(), LocalDateTime.now(), "CANCELED", "Cliente desistiu", null
         );
 
         when(appointmentService.cancelAppointment(eq(id), any())).thenReturn(mockResponse);
@@ -100,7 +100,7 @@ class AppointmentControllerTest {
         UUID id = UUID.randomUUID();
         AppointmentDTO.Response mockResponse = new AppointmentDTO.Response(
                 id, "John", null, null, null, null, "Corte",
-                LocalDateTime.now(), LocalDateTime.now(), "CANCELED", null
+                LocalDateTime.now(), LocalDateTime.now(), "CANCELED", null, null
         );
 
         when(appointmentService.cancelAppointment(eq(id), eq(null))).thenReturn(mockResponse);
@@ -115,7 +115,7 @@ class AppointmentControllerTest {
         UUID id = UUID.randomUUID();
         AppointmentDTO.Response mockResponse = new AppointmentDTO.Response(
                 id, "John", null, null, null, null, "Corte",
-                LocalDateTime.now(), LocalDateTime.now(), "COMPLETED", null
+                LocalDateTime.now(), LocalDateTime.now(), "COMPLETED", null, LocalDateTime.now()
         );
 
         when(appointmentService.completeAppointment(eq(id))).thenReturn(mockResponse);
