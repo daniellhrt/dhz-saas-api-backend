@@ -1,45 +1,96 @@
-# Architecture Overview
+# Architecture
 
-This document outlines the architectural decisions, structural patterns, and systemic behavior of the DHZ SaaS API Backend.
+> Last mapped: 2026-05-26
 
-## System Overview
+## Pattern
 
-The application is a Multi-Tenant Software-as-a-Service (SaaS) backend for managing barbershops, built with:
-- **Java 21**
-- **Spring Boot 3.2.x**
-- **PostgreSQL** (Production data store)
-- **H2 Database** (Development/Testing)
-- **Flyway** (Database migrations)
+**Multi-tenant SaaS REST API** using a layered DDD-lite architecture with row-level tenant isolation.
 
-## Architectural Style
+### Architectural Style
+- **Layered Architecture** — Controller → Service → Repository
+- **DDD-Lite Bounded Contexts** — Each domain (barber, client, catalog, appointment, product, sale) is a self-contained package with its own Controller, Service, Repository, DTO, and Entity
+- **Multi-Tenant** — Row-level isolation via `tenant_id` column; every query filters by `TenantContext.getTenantId()`
 
-The application follows a **Layered Architecture** applied within a **Package-by-Feature (or Domain)** directory structure.
+## Layers
 
-1. **Presentation Layer (`Controller`)**: Exposes RESTful endpoints, handles HTTP requests, and validates incoming payloads.
-2. **Business Layer (`Service`)**: Orchestrates business rules, validations (e.g., anti-IDOR checks, double-booking prevention), and controls transaction boundaries using `@Transactional`.
-3. **Persistence Layer (`Repository`)**: Interfaces with the database via Spring Data JPA. Queries are explicitly scoped to the current tenant.
+```
+┌─────────────────────────────────────────────┐
+│              Security Filter Chain           │
+│  RateLimitingFilter → SecurityFilter         │
+│  (JWT extraction, TenantContext injection)   │
+├─────────────────────────────────────────────┤
+│              REST Controllers                │
+│  AuthController, BarberController,           │
+│  ClientController, CatalogController,        │
+│  AppointmentController, ProductController,   │
+│  SaleController                              │
+├─────────────────────────────────────────────┤
+│              Services (Business Logic)       │
+│  AuthService, BarberService, ClientService,  │
+│  CatalogService, AppointmentService,         │
+│  ProductService, SaleService                 │
+├─────────────────────────────────────────────┤
+│              Repositories (Data Access)      │
+│  Spring Data JPA with tenant-scoped queries  │
+│  findByIdAndTenantId / findAllByTenantId     │
+├─────────────────────────────────────────────┤
+│              Database (PostgreSQL 16)         │
+│  Flyway migrations V1-V9                     │
+└─────────────────────────────────────────────┘
+```
 
-## Multi-Tenancy Strategy
+## Data Flow
 
-The system utilizes a **Shared Database, Shared Schema** approach for multi-tenancy.
-Logical data isolation is enforced at the application level:
+### Request Lifecycle
+1. HTTP request arrives at embedded Tomcat
+2. `RateLimitingFilter` checks if `/api/v1/auth/login` → rate limit by IP (Bucket4j)
+3. `SecurityFilter` extracts JWT `Bearer` token from `Authorization` header
+4. Token validated → `TenantContext.setTenantId(tenantId)` via `ThreadLocal`
+5. Spring Security sets `Authentication` with email + `ROLE_ADMIN` or `ROLE_USER`
+6. Controller receives request, delegates to Service
+7. Service uses `TenantContext.getTenantId()` for all data-scoped operations
+8. Repository queries always include `tenant_id` filter
+9. `finally` block in `SecurityFilter` calls `TenantContext.clear()` — prevents tenant leakage across pooled threads
 
-1. **Authentication**: Users (Barbers) authenticate and receive a JWT.
-2. **Tenant ID Extraction**: The `SecurityFilter` intercepts requests, validates the JWT, and extracts the `tenantId`.
-3. **Tenant Context**: The `tenantId` is injected into a `ThreadLocal` wrapper (`TenantContext`).
-4. **Data Isolation**: Repositories explicitly use the `tenantId` in their queries (e.g., `WHERE tenantId = :tenantId`) to ensure data belonging to one tenant is never leaked to or modified by another.
-5. **Cleanup**: The `SecurityFilter` strictly clears the `TenantContext` in a `finally` block to prevent tenant leakage across the application's thread pool.
+### Tenant Isolation Contract
+- **Set in:** `SecurityFilter.doFilterInternal()` (from JWT `tenantId` claim)
+- **Used by:** Every Service via `TenantContext.getTenantId()`
+- **Cleared in:** `SecurityFilter.doFilterInternal()` `finally` block
+- **Repository pattern:** `findByIdAndTenantId()`, `findAllByTenantId()`
 
-## Security Architecture
+## Key Abstractions
 
-- **Stateless Authentication**: Uses JWT (JSON Web Tokens). No session state is held on the server.
-- **Password Hashing**: BCrypt is used to securely hash passwords before storing them in the database.
-- **Filter Chain**: Custom `SecurityFilter` integrates with Spring Security to establish the security context (`UsernamePasswordAuthenticationToken`) per request.
+### TenantContext (`config/TenantContext.java`)
+`ThreadLocal<String>` storing the current request's `tenant_id`. Critical for row-level isolation.
 
-## Key Design Patterns & Practices
+### SecurityFilter (`security/SecurityFilter.java`)
+`OncePerRequestFilter` that extracts JWT, validates, sets `SecurityContext` + `TenantContext`, and cleans up in `finally`.
 
-- **DTO (Data Transfer Object)**: Decouples internal domain entities from the external API contract. DTOs are mapped to and from entities at the controller/service boundary (e.g., `AppointmentDTO`, `AuthDTO`).
-- **Repository Pattern**: Abstracts data access using Spring Data JPA, providing a cleaner interface over JPA/Hibernate.
-- **Dependency Injection**: Leverages Spring's IoC container. Dependencies are injected via constructors (mostly generated via Lombok's `@RequiredArgsConstructor`).
-- **ThreadLocal Context**: Safe propagation of request-scoped context (like the tenant ID) down through the layers without explicitly passing it through method signatures.
-- **Global Exception Handling**: `GlobalExceptionHandler` intercepts exceptions thrown across the application and standardizes them into structured JSON error responses (`StandardError`).
+### GlobalExceptionHandler (`exception/GlobalExceptionHandler.java`)
+Central exception mapping:
+- `InvalidCredentialsException` → 401
+- `IllegalArgumentException` / `IllegalStateException` → 400
+- `SecurityException` → 403
+- `MethodArgumentNotValidException` → 400 (validation)
+- `Exception` → 500 (generic fallback, no stack trace leak)
+
+All errors return `StandardError` JSON: `{ timestamp, status, error, message, path }`
+
+### Appointment State Machine
+```
+PENDING → CONFIRMED → IN_PROGRESS → COMPLETED
+PENDING → CANCELED
+CONFIRMED → CANCELED
+```
+- Transitions enforced in `AppointmentService`
+- `COMPLETED` can be reverted to `IN_PROGRESS`
+- Overlap check (`hasOverlappingAppointment`) ignores `CANCELED` appointments
+
+## Entry Points
+
+| Entry Point | Path | Auth |
+|-------------|------|------|
+| Register (public) | `POST /api/v1/auth/register` | None |
+| Login (public) | `POST /api/v1/auth/login` | None |
+| Swagger UI | `/swagger-ui/index.html` | None |
+| All other endpoints | `/api/v1/*` | JWT Bearer required |
