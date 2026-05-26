@@ -1,12 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: "
-milestone_name: milestone
-status: planning
-last_updated: "2026-05-26T13:25:04.948Z"
-last_activity: 2026-05-26
+milestone_name: Deploy MVP e Homologação
+status: completed
+last_updated: "2026-05-26T14:21:20.954Z"
+last_activity: 2026-05-26 — Milestone " started
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
