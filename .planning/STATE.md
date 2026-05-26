@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Evolução da API
-status: completed
-last_updated: "2026-05-26T12:58:46.287Z"
-last_activity: 2026-05-26 — Milestone v1.1 completed and archived
+milestone: "
+milestone_name: milestone
+status: planning
+last_updated: "2026-05-26T13:25:04.948Z"
+last_activity: 2026-05-26
 progress:
-  total_phases: 4
+  total_phases: 0
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -31,10 +31,10 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 
 ## Current Position
 
-Phase: Milestone v1.1 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-05-26 — Milestone v1.1 completed and archived
+Status: Defining requirements
+Last activity: 2026-05-26 — Milestone " started
 
 ## Memory
 

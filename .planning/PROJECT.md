@@ -43,7 +43,9 @@ Isolamento seguro de dados entre barbearias (multi-tenancy) e estabilidade da AP
 
 ### Active
 
-[none — v1.1 fully shipped]
+- [ ] Hospedagem do Backend em nuvem (Railway/Render) com Postgres e Redis — v1.2
+- [ ] Configurações de Produção (CORS, JWT Secret forte, Env Vars) — v1.2
+- [ ] Hospedagem do Frontend (Vercel) e apontamento para a API — v1.2
 
 ### Out of Scope
 

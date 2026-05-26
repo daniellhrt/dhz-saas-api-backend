@@ -3,7 +3,8 @@
 ## Milestones
 
 - ✅ **v1.0 Infra & Testing** — Phases 1–2 (shipped 2026-05-22)
-- ✅ **v1.1 Evolução da API** — Phases 3–6 (shipped 2026-05-22)
+- ✅ **v1.1 Evolução da API** — Phases 3–6 (shipped 2026-05-26)
+- 🚧 **v1.2 Deploy MVP e Homologação** — Phases 7–8 (in progress)
 
 ## Phases
 
@@ -25,6 +26,11 @@
 
 </details>
 
+### 🚧 v1.2 Deploy MVP (In Progress)
+
+- [ ] **Phase 7: Backend Deploy & Cloud Config** — Hospedar API, Postgres e Redis na nuvem
+- [ ] **Phase 8: Frontend Deploy & Integração** — Hospedar frontend no Vercel e conectar à API de produção
+
 ## Progress
 
 | Phase | Milestone | Requirements | Status |
@@ -35,45 +41,29 @@
 | 4. Gestão de Status de Agendamentos | v1.1 | STATUS-01..03 | Complete |
 | 5. Rate Limiting Distribuído | v1.1 | RL-01..03 | Complete |
 | 6. Testes para Client e Catalog | v1.1 | TEST-06..09 | Complete |
+| 7. Backend Deploy & Cloud Config | v1.2 | DEPLOY-01..05 | Pending |
+| 8. Frontend Deploy & Integração | v1.2 | FRONT-01..02, E2E-01 | Pending |
 
 ---
 
 ## Detalhamento das Fases
 
-### Phase 3: Registro de Barbeiros
-**Goal:** Implementar CRUD completo de barbeiros (hoje só existe login)
-**Requirements:** REG-01, REG-02, REG-03, REG-04
+### Phase 7: Backend Deploy & Cloud Config
+**Goal:** Hospedar a API de forma acessível na internet junto ao banco de dados e Redis.
+**Requirements:** DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04, DEPLOY-05
 **Success Criteria:**
-1. POST /api/v1/barbers cria um novo barbeiro com hash de senha
-2. GET /api/v1/barbers lista barbeiros do tenant logado
-3. PUT /api/v1/barbers/{id} atualiza dados do barbeiro (com validação de tenant)
-4. DELETE /api/v1/barbers/{id} remove barbeiro (com validação de tenant)
+1. A API retorna 200 OK na URL pública da nuvem.
+2. Banco de Dados e Redis operacionais e acessíveis pela API.
+3. CORS configurado corretamente para o domínio do frontend (ou liberado em homologação).
 
-### Phase 4: Gestão de Status de Agendamentos
-**Goal:** Adicionar transições de status nos agendamentos
-**Requirements:** STATUS-01, STATUS-02, STATUS-03
+### Phase 8: Frontend Deploy & Integração
+**Goal:** Hospedar o Frontend e permitir o uso real via celular (integração E2E).
+**Requirements:** FRONT-01, FRONT-02, E2E-01
 **Success Criteria:**
-1. PATCH /api/v1/appointments/{id}/confirm altera status para CONFIRMED
-2. PATCH /api/v1/appointments/{id}/cancel altera status para CANCELLED
-3. PATCH /api/v1/appointments/{id}/complete altera status para COMPLETED
-
-### Phase 5: Rate Limiting Distribuído
-**Goal:** Substituir rate limiting em memória por Redis distribuído
-**Requirements:** RL-01, RL-02, RL-03
-**Success Criteria:**
-1. Redis adicionado ao compose.yaml
-2. Bucket4j configurado para usar Redis como backend
-3. Rate limiting funciona com múltiplas instâncias da API
-
-### Phase 6: Testes para Client e Catalog
-**Goal:** Expandir cobertura de testes para todos os domínios
-**Requirements:** TEST-06, TEST-07, TEST-08, TEST-09
-**Success Criteria:**
-1. ClientServiceTest testa criação, listagem e validação de tenant
-2. ClientControllerTest testa endpoints via MockMvc
-3. CatalogServiceTest testa criação, desativação e listagem
-4. CatalogControllerTest testa endpoints via MockMvc
+1. Frontend acessível publicamente via Vercel/Netlify.
+2. Login pelo frontend de produção funciona e persiste a sessão corretamente.
+3. As operações na API através do frontend mobile ocorrem sem erros de CORS ou conexão.
 
 ---
 
-*See archived details: `.planning/milestones/v1.0-ROADMAP.md`*
+*See archived details: `.planning/milestones/v1.0-ROADMAP.md` e `.planning/milestones/v1.1-ROADMAP.md`*
