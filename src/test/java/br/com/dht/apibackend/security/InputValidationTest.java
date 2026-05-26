@@ -97,7 +97,7 @@ public class InputValidationTest {
 
     @Test
     void shouldRejectNegativePriceAndShortDurationOnCatalog() throws Exception {
-        ServiceItemDTO.Request request = new ServiceItemDTO.Request("Corte", null, new BigDecimal("-5.00"), 10);
+        ServiceItemDTO.Request request = new ServiceItemDTO.Request("Corte", null, new BigDecimal("-5.00"), 4);
 
         mockMvc.perform(post("/api/v1/catalog")
                         .contentType(MediaType.APPLICATION_JSON)
